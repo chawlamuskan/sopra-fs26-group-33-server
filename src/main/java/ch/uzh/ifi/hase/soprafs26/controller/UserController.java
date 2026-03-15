@@ -1,0 +1,124 @@
+package ch.uzh.ifi.hase.soprafs26.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
+import ch.uzh.ifi.hase.soprafs26.service.UserService;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+/**
+ * User Controller
+ * This class is responsible for handling all REST request that are related to
+ * the user.
+ * The controller will receive the request and delegate the execution to the
+ * UserService and finally return the result.
+ */
+@RestController
+public class UserController {
+
+	private final UserService userService;
+
+	UserController(UserService userService) {
+		this.userService = userService;
+	}
+
+	@GetMapping("/users")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<UserGetDTO> getAllUsers(
+		@RequestHeader(value = "Authorization", required = false) String token) {
+			userService.validateToken(token); // validate token for authorization
+		// fetch all users in the internal representation
+		List<User> users = userService.getUsers();
+		List<UserGetDTO> userGetDTOs = new ArrayList<>();
+
+		// convert each user to the API representation
+		for (User user : users) {
+			userGetDTOs.add(DTOMapper.INSTANCE.convertEntityToUserGetDTO(user));
+		}
+		return userGetDTOs;
+	}
+
+	@PostMapping("/users")
+	@ResponseStatus(HttpStatus.CREATED)
+	@ResponseBody
+	public UserGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
+		// convert API user to internal representation
+		User userInput = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
+
+		// create user
+		User createdUser = userService.createUser(userInput);
+		// convert internal representation of user back to API
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
+	}
+
+	// added for login 
+
+	@PostMapping("/login")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public UserGetDTO loginUser(@RequestBody UserLoginDTO loginDTO) {
+
+		User user = userService.loginUser(
+			loginDTO.getUsername(),
+			loginDTO.getPassword()
+		);
+
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user); 
+		// i need to return this and not the raw user bc that could expose raw data like passowrd
+		// so send it to service and convert then via mapper to ensure data safety 
+	}
+
+	// added fpr specific user login
+	@GetMapping("/users/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public UserGetDTO getUser(@PathVariable Long id,
+		@RequestHeader(value = "Authorization", required = false) String token) {
+		userService.validateToken(token);
+		
+		User user = userService.getUserById(id);
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
+	}
+
+	// added for logout if i am logged in in specific user site 
+	@PostMapping("/logout/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public void logoutUser(@PathVariable Long id) {
+		userService.logoutUser(id);
+	}
+
+	// added for updating password - user will be logged out after password change
+	@PutMapping("/users/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseBody
+	public void updateUser(
+			@PathVariable Long id,
+			@RequestBody UserPutDTO userPutDTO) {
+
+		// Fetch the user by id
+		User user = userService.getUserById(id);
+		
+		// If the user is not found, throw a 404
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+
+		userService.updatePassword(id, userPutDTO.getPassword());
+	}
+
+}
