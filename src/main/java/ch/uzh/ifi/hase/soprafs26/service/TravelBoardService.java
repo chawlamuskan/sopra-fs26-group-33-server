@@ -62,4 +62,33 @@ public class TravelBoardService {
         return newTravelBoard;
 	}
 
+    public TravelBoard renameTravelBoard(Long boardId, Long userId, String newName){
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+
+        if (!board.getOwner().getId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you must be owner");
+        }
+
+        if (newName == null || newName.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Board name cannot be empty");
+        }
+
+        board.setName(newName.trim());
+        board = travelBoardRepository.save(board);
+
+        return board;
+    }
+
+
+    public void deleteTravelBoard(Long boardId, Long userId){
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+
+        if (!board.getOwner().getId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you must be owner");
+        }
+
+        travelBoardRepository.delete(board);
+    }
 }
