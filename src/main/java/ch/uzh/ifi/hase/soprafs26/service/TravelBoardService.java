@@ -91,4 +91,8 @@ public class TravelBoardService {
 
         travelBoardRepository.delete(board);
     }
+
+    public List<TravelBoard> getTravelBoardsByOwner(Long ownerId) {
+        return travelBoardRepository.findByOwnerId(ownerId);
+    }
 }

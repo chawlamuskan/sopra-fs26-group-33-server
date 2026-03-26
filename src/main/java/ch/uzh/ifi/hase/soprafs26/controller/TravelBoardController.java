@@ -1,5 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,5 +57,20 @@ public class TravelBoardController {
         travelBoardService.deleteTravelBoard(boardId, userId);
     }
 
+    @GetMapping("/travelboards/user/{ownerId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<TravelBoardGetDTO> getTravelBoardsByOwner(@PathVariable Long ownerId){
+        List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByOwner(ownerId);
+
+        List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
+
+        for (TravelBoard travelBoard : travelBoards) {
+            travelBoardGetDTOs.add(DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(travelBoard));
+        }
+
+    return travelBoardGetDTOs;
+        
+    }
 
 }
