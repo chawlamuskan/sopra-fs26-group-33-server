@@ -14,7 +14,10 @@ import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -52,6 +55,7 @@ public class TravelBoardService {
             }
 
         newTravelBoard.setOwner(owner);
+        newTravelBoard.getMembers().add(owner);
         newTravelBoard.setInviteCode(UUID.randomUUID().toString().substring(0, 8));
         newTravelBoard.setDateCreated(LocalDate.now());
 
@@ -92,7 +96,20 @@ public class TravelBoardService {
         travelBoardRepository.delete(board);
     }
 
-    public List<TravelBoard> getTravelBoardsByOwner(Long ownerId) {
-        return travelBoardRepository.findByOwnerId(ownerId);
+    public List<TravelBoard> getTravelBoardsByUser(Long userId) {
+        List<TravelBoard> ownerBoards = travelBoardRepository.findByOwnerId(userId);
+        List<TravelBoard> memberBoards = travelBoardRepository.findByMembersId(userId);
+
+        List<TravelBoard> result = new ArrayList<>();
+
+        result.addAll(ownerBoards);
+
+        for (TravelBoard board : memberBoards) {
+            if (!result.contains(board)) {  
+                result.add(board);
+            }
+        }
+
+        return result;
     }
 }

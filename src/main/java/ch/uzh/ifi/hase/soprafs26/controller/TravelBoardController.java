@@ -57,11 +57,11 @@ public class TravelBoardController {
         travelBoardService.deleteTravelBoard(boardId, userId);
     }
 
-    @GetMapping("/travelboards/user/{ownerId}")
+    @GetMapping("/users/{userId}/travelboards")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<TravelBoardGetDTO> getTravelBoardsByOwner(@PathVariable Long ownerId){
-        List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByOwner(ownerId);
+    public List<TravelBoardGetDTO> getTravelBoardsByUser(@PathVariable Long userId){
+        List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByUser(userId);
 
         List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
 

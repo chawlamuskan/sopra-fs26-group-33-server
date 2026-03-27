@@ -10,4 +10,5 @@ import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 public interface TravelBoardRepository extends JpaRepository<TravelBoard, Long> {
 	TravelBoard findByName(String name);
     List<TravelBoard> findByOwnerId(Long ownerId);
+    List<TravelBoard> findByMembersId(Long userId);
 }
