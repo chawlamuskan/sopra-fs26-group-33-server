@@ -3,7 +3,10 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
+import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 
@@ -40,4 +43,20 @@ public interface DTOMapper {
 	@Mapping(source = "creationDate", target = "creationDate") // new add creation date
 	UserGetDTO convertEntityToUserGetDTO(User user);
 	// for get , dont expose data like password or token to client 
+
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "startDate", target = "startDate")
+	@Mapping(source = "endDate", target = "endDate")
+	@Mapping(source = "privacy", target = "privacy")
+    TravelBoard convertTravelBoardPostDTOtoEntity(TravelBoardPostDTO travelBoardPostDTO);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "startDate", target = "startDate")
+	@Mapping(source = "endDate", target = "endDate")
+	@Mapping(source = "owner.id", target = "ownerId")
+	@Mapping(source = "inviteCode", target = "inviteCode")
+	@Mapping(source = "privacy", target = "privacy")
+	@Mapping(source = "dateCreated", target = "dateCreated")
+    TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
 }
