@@ -41,13 +41,13 @@ public class User implements Serializable {
 	private UserStatus status = UserStatus.OFFLINE;
 
 	@Column(nullable = false)
-	private String password;		// added password 
+	private String password;
+
+	@Column
+	private String bio;
 
 	@Column(nullable = false)
-	private String bio; 			// added bio 
-
-	@Column(nullable = false)
-	private LocalDate creationDate;		// added creation Date
+	private LocalDate creationDate;
 
 	public Long getId() {
 		return id;
