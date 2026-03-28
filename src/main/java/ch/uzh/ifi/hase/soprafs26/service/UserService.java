@@ -41,6 +41,7 @@ public class UserService {
 	// modified this part  to handle password bio creationdate
 	public User createUser(User newUser) {
 		checkIfUserExists(newUser);	// check if username or name already exists
+		validatePassword(newUser.getPassword()); // validate password format
 		newUser.setToken(UUID.randomUUID().toString()); // set default values
 		newUser.setStatus(UserStatus.ONLINE);
 		newUser.setCreationDate(java.time.LocalDate.now());	// set creation date (added this to User.java)
@@ -48,6 +49,25 @@ public class UserService {
 
 		log.debug("Created Information for User: {}", newUser);
 		return newUser;
+	}
+
+	private void validatePassword(String password) {
+		if (password == null || password.length() < 8) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Password must be at least 8 characters long");
+		}
+		if (!password.matches(".*[A-Z].*")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Password must contain at least one uppercase letter");
+		}
+		if (!password.matches(".*[0-9].*")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Password must contain at least one number");
+		}
+		if (!password.matches(".*[^a-zA-Z0-9].*")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Password must contain at least one special character");
+		}
 	}
 
 	// added for user
@@ -82,12 +102,8 @@ public class UserService {
 		userRepository.save(user);
 	}
 
-	// for user story 3 i need to update the password 
-	/**
-     * Update the user's own password.
-     * This method does not require Authorization header because frontend ensures
-     * only logged-in users can access their own profile.
-     */
+	// Update user's password (only logged-in users can access their own profile)
+    // This method does not require Authorization header because frontend ensures
     public void updatePassword(Long userId, String newPassword) {
         // Find the user
         User user = userRepository.findById(userId)
@@ -97,6 +113,7 @@ public class UserService {
         if (newPassword == null || newPassword.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty");
         }
+		validatePassword(newPassword); 	// validate new password adheres to required format
 
         // Update password
         user.setPassword(newPassword);
@@ -107,7 +124,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-	// ADDED: validate that the token exists and belongs to a real logged-in user
+	// Validate that the token exists and belongs to a real logged-in user
 	public void validateToken(String token) {
 		if (token == null || token.trim().isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided");
@@ -139,4 +156,6 @@ public class UserService {
 				"Email is already taken");
 		}
 	}
+
+	
 }
