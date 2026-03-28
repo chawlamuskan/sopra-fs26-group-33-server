@@ -38,40 +38,33 @@ public class UserService {
 		return this.userRepository.findAll();
 	}
 
-	// mpdified this part  to handle password bio creationdate
-
+	// modified this part  to handle password bio creationdate
 	public User createUser(User newUser) {
-    // check if username or name already exists
-    checkIfUserExists(newUser);
+		checkIfUserExists(newUser);	// check if username or name already exists
+		newUser.setToken(UUID.randomUUID().toString()); // set default values
+		newUser.setStatus(UserStatus.ONLINE);
+		newUser.setCreationDate(java.time.LocalDate.now());	// set creation date (added this to User.java)
+		newUser = userRepository.save(newUser);	// save the user with all fields including password and bio
 
-    // set default values
-    newUser.setToken(UUID.randomUUID().toString());
-    newUser.setStatus(UserStatus.ONLINE);
-
-    // set creation date (added this to User.java)
-    newUser.setCreationDate(java.time.LocalDate.now());
-
-    // save the user with all fields including password and bio
-    newUser = userRepository.save(newUser);
-
-    log.debug("Created Information for User: {}", newUser);
-    return newUser;
+		log.debug("Created Information for User: {}", newUser);
+		return newUser;
 	}
 
 	// added for user
+	public User loginUser(String username, String email, String password) {
+		User user = null;
+		if (username != null && !username.trim().isEmpty()) {
+			user = userRepository.findByUsername(username);
+		} else if (email != null && !email.trim().isEmpty()) {
+			user = userRepository.findByEmail(email);
+		}
+		if (user == null || !user.getPassword().equals(password)) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+		}
+		user.setStatus(UserStatus.ONLINE);
+		user.setToken(UUID.randomUUID().toString());
 
-	public User loginUser(String username, String password) {
-
-    User user = userRepository.findByUsername(username);
-
-    if (user == null || !user.getPassword().equals(password)) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-    }
-
-    user.setStatus(UserStatus.ONLINE);
-    user.setToken(UUID.randomUUID().toString());
-
-    return userRepository.save(user);
+		return userRepository.save(user);
 	}
 
 	// added for getuser id for speficif user page 
@@ -83,10 +76,10 @@ public class UserService {
 
 	// had problem that after logging out with button the status stayed ONLINE - so need this 
 	public void logoutUser(Long userId) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-    user.setStatus(UserStatus.OFFLINE);
-    userRepository.save(user);
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+		user.setStatus(UserStatus.OFFLINE);
+		userRepository.save(user);
 	}
 
 	// for user story 3 i need to update the password 
@@ -130,28 +123,20 @@ public class UserService {
 	//}
 
 	
-	/**
-	 * This is a helper method that will check the uniqueness criteria of the
-	 * username and the name
-	 * defined in the User entity. The method will do nothing if the input is unique
-	 * and throw an error otherwise.
-	 *
-	 * @param userToBeCreated
-	 * @throws org.springframework.web.server.ResponseStatusException
-	 * @see User
-	 */
+	// Check uniqueness criteria of the username and email #43
 	private void checkIfUserExists(User userToBeCreated) {
 		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-		User userByName = userRepository.findByName(userToBeCreated.getName());
+		User userByEmail = userRepository.findByEmail(userToBeCreated.getEmail());
 
-		String baseErrorMessage = "The %s provided %s not unique. Therefore, the user could not be created!";
-		if (userByUsername != null && userByName != null) {
+		if (userByUsername != null && userByEmail != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
-					String.format(baseErrorMessage, "username and the name", "are"));
+				"Username and email are already taken");
 		} else if (userByUsername != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, String.format(baseErrorMessage, "username", "is"));
-		} else if (userByName != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, String.format(baseErrorMessage, "name", "is"));
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+				"Username is already taken");
+		} else if (userByEmail != null) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, 
+				"Email is already taken");
 		}
 	}
 }
