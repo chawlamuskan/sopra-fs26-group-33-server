@@ -41,13 +41,12 @@ public class TravelBoardController {
 
 
     @PutMapping("/travelboards/{boardId}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
 	@ResponseBody
-    public TravelBoardGetDTO renameTravelBoard(@PathVariable Long boardId, @RequestParam Long userId, @RequestBody TravelBoardPutDTO travelBoardPutDTO) {
-        TravelBoard updatedBoard = travelBoardService.renameTravelBoard(
+    public void renameTravelBoard(@PathVariable Long boardId, @RequestParam Long userId, @RequestBody TravelBoardPutDTO travelBoardPutDTO) {
+        travelBoardService.renameTravelBoard(
             boardId, userId, travelBoardPutDTO.getName());
-        
-        return DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(updatedBoard);
+
     }
 
     @DeleteMapping("/travelboards/{boardId}")
