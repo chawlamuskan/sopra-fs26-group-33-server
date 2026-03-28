@@ -72,4 +72,11 @@ public class TravelBoardController {
         
     }
 
+    @GetMapping("/travelboards/{boardId}/inviteCode")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public String getInviteCode(@PathVariable Long boardId) {
+        return travelBoardService.getInviteCode(boardId);
+    }
+
 }

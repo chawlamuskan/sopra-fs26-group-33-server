@@ -108,4 +108,11 @@ public class TravelBoardService {
 
         return result;
     }
+
+    public String getInviteCode(Long boardId) {
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+        
+        return board.getInviteCode();
+    }
 }
