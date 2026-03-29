@@ -38,7 +38,7 @@ public class UserService {
 		return this.userRepository.findAll();
 	}
 
-	// modified this part  to handle password bio creationdate
+	// Register new user
 	public User createUser(User newUser) {
 		checkIfUserExists(newUser);	// check if username or name already exists
 		validatePassword(newUser.getPassword()); // validate password format
@@ -51,6 +51,7 @@ public class UserService {
 		return newUser;
 	}
 
+	// Check valid password format during registration and password change
 	private void validatePassword(String password) {
 		if (password == null || password.length() < 8) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
@@ -70,7 +71,7 @@ public class UserService {
 		}
 	}
 
-	// added for user
+	// Login user (with username/email and password)
 	public User loginUser(String username, String email, String password) {
 		User user = null;
 		if (username != null && !username.trim().isEmpty()) {
@@ -78,6 +79,7 @@ public class UserService {
 		} else if (email != null && !email.trim().isEmpty()) {
 			user = userRepository.findByEmail(email);
 		}
+		// return error if user not found OR password does not match
 		if (user == null || !user.getPassword().equals(password)) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
 		}
