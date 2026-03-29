@@ -6,6 +6,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
@@ -35,8 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * UserControllerTest
- * This is a WebMvcTest which allows to test the UserController i.e. GET/POST
- * request without actually sending them over the network.
+ * This is a WebMvcTest which allows to test the UserController 
+ * i.e. GET/POST request without actually sending them over the network.
  * This tests if the UserController works.
  */
 @WebMvcTest(UserController.class)
@@ -48,6 +49,7 @@ public class UserControllerTest {
 	@MockitoBean
 	private UserService userService;
 
+	// ================ GET /users TESTS ================
 	@Test
 	public void givenUsers_whenGetUsers_thenReturnJsonArray() throws Exception {
 		// given
@@ -78,6 +80,7 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$[0].status", is(user.getStatus().toString())));
 	}
 
+	// ================ POST /users TESTS ================
 	@Test
 	public void createUser_validInput_userCreated() throws Exception {
 		// given
@@ -172,6 +175,58 @@ public class UserControllerTest {
 				.andExpect(status().isBadRequest()); // HTTP 400
 	}
 
+	// ================ POST /login TESTS ================
+	@Test
+	public void loginUser_validCredentials_returnsOk() throws Exception {
+		UserLoginDTO loginDTO = new UserLoginDTO();
+		loginDTO.setUsername("testUsername");
+		loginDTO.setPassword("Test1234!");
+
+		User loggedInUser = new User();
+		loggedInUser.setId(1L);
+		loggedInUser.setName("Test User");
+		loggedInUser.setUsername("testUsername");
+		loggedInUser.setEmail("test@example.com");
+		loggedInUser.setToken("testToken");
+		loggedInUser.setStatus(UserStatus.ONLINE);
+
+		given(userService.loginUser(Mockito.any(), Mockito.any(), Mockito.any()))
+			.willReturn(loggedInUser);
+		
+		MockHttpServletRequestBuilder postRequest = post("/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(asJsonString(loginDTO));
+
+		mockMvc.perform(postRequest)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id", is(loggedInUser.getId().intValue())))
+				.andExpect(jsonPath("$.name", is(loggedInUser.getName())))
+				.andExpect(jsonPath("$.username", is(loggedInUser.getUsername())))
+				.andExpect(jsonPath("$.email", is(loggedInUser.getEmail())))
+				.andExpect(jsonPath("$.password").doesNotExist()) // password should not be returned in the response
+				.andExpect(jsonPath("$.status", is(loggedInUser.getStatus().toString())))
+				.andExpect(jsonPath("$.token", is(loggedInUser.getToken())));
+	}
+
+	@Test
+	public void loginUser_invalidCredentials_returnsUnauthorized() throws Exception {
+		UserLoginDTO loginDTO = new UserLoginDTO();
+		loginDTO.setUsername("testUsername"); 
+		loginDTO.setPassword("WrongPass1!");
+
+		given(userService.loginUser(Mockito.any(), Mockito.any(), Mockito.any()))
+			.willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+		
+		MockHttpServletRequestBuilder postRequest = post("/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(asJsonString(loginDTO));
+
+		mockMvc.perform(postRequest)
+				.andExpect(status().isUnauthorized());
+	}
+	
+	
+	// ================ GET /users/{id} TESTS ================
 	@Test
 	public void getUser_validId_returnsUser() throws Exception {
 		// Step 1: Create a dummy user to be returned by the service
@@ -228,6 +283,7 @@ public class UserControllerTest {
 				.andExpect(status().isNotFound());
 	}
 
+	// ================ PUT /users/{id} TESTS ================
 	@Test
 	public void updateUser_validInput_noContent() throws Exception {
 		// Create a dummy user to be updated
