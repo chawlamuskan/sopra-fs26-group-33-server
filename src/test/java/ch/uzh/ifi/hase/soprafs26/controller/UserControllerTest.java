@@ -54,6 +54,7 @@ public class UserControllerTest {
 		User user = new User();
 		user.setName("Firstname Lastname");
 		user.setUsername("firstname@lastname");
+		user.setEmail("test@example.com");
 		user.setStatus(UserStatus.OFFLINE);
 
 		List<User> allUsers = Collections.singletonList(user);
@@ -73,6 +74,7 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$", hasSize(1)))
 				.andExpect(jsonPath("$[0].name", is(user.getName())))
 				.andExpect(jsonPath("$[0].username", is(user.getUsername())))
+				.andExpect(jsonPath("$[0].email", is(user.getEmail())))
 				.andExpect(jsonPath("$[0].status", is(user.getStatus().toString())));
 	}
 
@@ -83,12 +85,15 @@ public class UserControllerTest {
 		user.setId(1L);
 		user.setName("Test User");
 		user.setUsername("testUsername");
+		user.setEmail("test@example.com");
 		user.setToken("1");
 		user.setStatus(UserStatus.ONLINE);
 
 		UserPostDTO userPostDTO = new UserPostDTO();
 		userPostDTO.setName("Test User");
 		userPostDTO.setUsername("testUsername");
+		userPostDTO.setEmail("test@example.com");
+		userPostDTO.setPassword("Test1234!");
 
 		given(userService.createUser(Mockito.any())).willReturn(user);
 
@@ -103,38 +108,68 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.id", is(user.getId().intValue())))
 				.andExpect(jsonPath("$.name", is(user.getName())))
 				.andExpect(jsonPath("$.username", is(user.getUsername())))
+				.andExpect(jsonPath("$.email", is(user.getEmail())))
 				.andExpect(jsonPath("$.status", is(user.getStatus().toString())));
 	}
 
 	@Test
 	public void createUser_duplicateUsername_conflict() throws Exception {
-		// Step 1: Create the first user object (already exists in system)
-		User existingUser = new User();
-		existingUser.setId(1L);
-		existingUser.setName("Existing User");
-		existingUser.setUsername("duplicateUsername");
-		existingUser.setToken("token1");
-		existingUser.setStatus(UserStatus.ONLINE);
-
-		// Step 2: Create the UserPostDTO with the same username
+		
 		UserPostDTO duplicateUserDTO = new UserPostDTO();
 		duplicateUserDTO.setName("Another User");
 		duplicateUserDTO.setUsername("duplicateUsername"); // duplicate username
-		duplicateUserDTO.setPassword("password123");
-		duplicateUserDTO.setBio("I am a duplicate");
+		duplicateUserDTO.setEmail("email@example.com");
+		duplicateUserDTO.setPassword("Test1234!");
 
-		// Step 3: Mock the userService to throw ResponseStatusException for conflict
 		given(userService.createUser(Mockito.any()))
 			.willThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists"));
 
-		// Step 4: Perform POST request to /users
 		MockHttpServletRequestBuilder postRequest = post("/users")
-				.contentType(MediaType.APPLICATION_JSON)  // send JSON in body
-				.content(asJsonString(duplicateUserDTO)); // helper method converts DTO to JSON
+				.contentType(MediaType.APPLICATION_JSON) 
+				.content(asJsonString(duplicateUserDTO)); 
 
-		// Step 5: Validate that the response status is 409 CONFLICT
 		mockMvc.perform(postRequest)
 				.andExpect(status().isConflict()); // HTTP 409
+	}
+
+	@Test
+	public void createUser_duplicateEmail_conflict() throws Exception {
+		
+		UserPostDTO duplicateUserDTO = new UserPostDTO();
+		duplicateUserDTO.setName("Another User");
+		duplicateUserDTO.setUsername("anotherUsername"); 
+		duplicateUserDTO.setEmail("duplicate@example.com"); // duplicate email
+		duplicateUserDTO.setPassword("Test1234!");
+
+		given(userService.createUser(Mockito.any()))
+			.willThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists"));
+
+		MockHttpServletRequestBuilder postRequest = post("/users")
+				.contentType(MediaType.APPLICATION_JSON) 
+				.content(asJsonString(duplicateUserDTO)); 
+
+		mockMvc.perform(postRequest)
+				.andExpect(status().isConflict()); // HTTP 409
+	}
+
+	@Test
+	public void createUser_invalidPassword_badRequest() throws Exception {
+		
+		UserPostDTO invalidPasswordDTO = new UserPostDTO();
+		invalidPasswordDTO.setName("Test User");
+		invalidPasswordDTO.setUsername("testUsername"); 
+		invalidPasswordDTO.setEmail("test@example.com");
+		invalidPasswordDTO.setPassword("weak");
+
+		given(userService.createUser(Mockito.any()))
+			.willThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password format."));
+
+		MockHttpServletRequestBuilder postRequest = post("/users")
+				.contentType(MediaType.APPLICATION_JSON) 
+				.content(asJsonString(invalidPasswordDTO)); 
+
+		mockMvc.perform(postRequest)
+				.andExpect(status().isBadRequest()); // HTTP 400
 	}
 
 	@Test
@@ -144,6 +179,7 @@ public class UserControllerTest {
 		user.setId(1L);
 		user.setName("John Doe");
 		user.setUsername("john_doe");
+		user.setEmail("john.doe@example.com");
 		user.setToken("token123");
 		user.setStatus(UserStatus.ONLINE);
 		user.setBio("Hello, I'm John!");
@@ -166,6 +202,7 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.id", is(user.getId().intValue())))
 				.andExpect(jsonPath("$.name", is(user.getName())))
 				.andExpect(jsonPath("$.username", is(user.getUsername())))
+				.andExpect(jsonPath("$.email", is(user.getEmail())))
 				.andExpect(jsonPath("$.status", is(user.getStatus().toString())))
 				.andExpect(jsonPath("$.bio", is(user.getBio())))
 				.andExpect(jsonPath("$.creationDate", is(user.getCreationDate().toString())));
@@ -193,32 +230,29 @@ public class UserControllerTest {
 
 	@Test
 	public void updateUser_validInput_noContent() throws Exception {
-		// Step 1: Create a dummy user to be updated
+		// Create a dummy user to be updated
 		User user = new User();
 		user.setId(1L);
 		user.setName("Test User");
 		user.setUsername("testUsername");
+		user.setEmail("test@example.com");
 		user.setToken("token123");
 		user.setStatus(UserStatus.ONLINE);
 
-		// Step 4: Create the UserPutDTO with new password
 		UserPutDTO userPutDTO = new UserPutDTO();
-		userPutDTO.setPassword("newSecurePassword");
+		userPutDTO.setPassword("Test1234!");
 
-		// Step 2: Mock the service to find the user by ID
 		given(userService.getUserById(user.getId())).willReturn(user);
-
-		// Step 3: Mock the service update method (void) to do nothing
 		Mockito.doNothing().when(userService).updatePassword(Mockito.eq(user.getId()), Mockito.any());
 
-		// Step 5: Create PUT request
+		// Create PUT request
 		MockHttpServletRequestBuilder putRequest = put("/users/{id}", user.getId())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(asJsonString(userPutDTO));
 
-		// Step 6: Perform request and expect 204 No Content
+		// Perform request and expect 204 No Content
 		mockMvc.perform(putRequest)
-				.andExpect(status().isNoContent());
+			.andExpect(status().isNoContent());
 	}
 
 	@Test
@@ -243,14 +277,6 @@ public class UserControllerTest {
 				.andExpect(status().isNotFound()); // 404 Not Found
 	}
 
-	/**
-	 * Helper Method to convert userPostDTO into a JSON string such that the input
-	 * can be processed
-	 * Input will look like this: {"name": "Test User", "username": "testUsername"}
-	 * 
-	 * @param object
-	 * @return string
-	 */
 	private String asJsonString(final Object object) {
 		try {
 			return new ObjectMapper().writeValueAsString(object);
