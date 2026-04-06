@@ -79,4 +79,12 @@ public class TravelBoardController {
         return travelBoardService.getInviteCode(boardId);
     }
 
+    @PostMapping("/travelboards/join")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public void joinTravelBoardByInviteCode(@RequestParam Long userId, @RequestParam String inviteCode) {
+        travelBoardService.joinTravelBoardByInviteCode(userId, inviteCode);
+
+	}
+
 }

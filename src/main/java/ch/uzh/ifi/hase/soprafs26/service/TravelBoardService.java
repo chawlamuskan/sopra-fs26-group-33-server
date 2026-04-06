@@ -115,4 +115,22 @@ public class TravelBoardService {
         
         return board.getInviteCode();
     }
+
+    public void joinTravelBoardByInviteCode(Long userId, String inviteCode){
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        TravelBoard board = travelBoardRepository.findByInviteCode(inviteCode);
+
+        if (board == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invite code is invalid");
+        }
+
+        if (board.getMembers().contains(user) || board.getOwner().getId().equals(userId)){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already a member of this board");
+        }
+
+        board.getMembers().add(user);
+        travelBoardRepository.save(board);        
+    }
 }
