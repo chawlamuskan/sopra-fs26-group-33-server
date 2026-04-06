@@ -11,6 +11,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 
+import org.apache.catalina.connector.Response;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -261,7 +262,56 @@ public class UserControllerTest {
 				.andExpect(status().isUnauthorized());
 	}
 	
+	// ================ POST /users/logout TESTS ================
+	@Test	// test that a user can log out successfully with a valid token
+	public void logoutUser_validToken_returnsNoContent() throws Exception {
+		// GIVEN a valid token for an online user
+		Mockito.doNothing().when(userService).validateToken(Mockito.eq("valid-token"));
+		Mockito.doNothing().when(userService).logoutByToken(Mockito.eq("valid-token"));
+		
+		// WHEN POST /users/logout is called with the valid token in the Authorization header
+		MockHttpServletRequestBuilder postRequest = post("/users/logout")
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", "valid-token");
+		
+		// THEN return 204 NO CONTENT
+		mockMvc.perform(postRequest)
+			.andExpect(status().isNoContent());
+	}
 	
+	@Test	// test that a user can log out successfully with a invalid token
+	public void logoutUser_invalidToken_returnsUnauthorized() throws Exception {
+		// GIVEN an invalid token
+		Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token"))
+				.when(userService).validateToken(Mockito.eq("invalid-token"));
+		
+		// WHEN POST /users/logout is called with the invalid token
+		MockHttpServletRequestBuilder postRequest = post("/users/logout")
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", "invalid-token");
+		
+		// THEN return 401 UNAUTHORIZED
+		mockMvc.perform(postRequest)
+			.andExpect(status().isUnauthorized());
+	}
+	
+	@Test	// test that restricted pages cannot be accessed after logged out (i.e. token is invalid after logout)
+	public void logoutUser_AccessRestrictedPages_returnsUnauthorized() throws Exception {
+		// GIVEN user has logged out and token is now invalid
+		Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token"))
+				.when(userService).validateToken(Mockito.eq("old-token"));
+		
+		// WHEN trying to access a restricted page with the old token after logout
+		MockHttpServletRequestBuilder getRequest = get("/users")
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", "old-token");
+
+		// THEN return 401 UNAUTHORIZED
+		mockMvc.perform(getRequest)
+			.andExpect(status().isUnauthorized());
+	}
+
+
 	// ================ GET /users/{id} TESTS ================
 	@Test
 	public void getUser_validId_returnsUser() throws Exception {

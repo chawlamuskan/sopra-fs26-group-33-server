@@ -192,4 +192,69 @@ public class UserServiceIntegrationTest {
 		assertEquals(UserStatus.ONLINE, userFromDB.getStatus());	// status persists in DB
 	}
 
+
+// ================ LOGOUT TESTS ================
+	@Test  // test that session token is deleted after logout
+	public void logoutUser_deletesToken() {
+		// GIVEN a logged in user
+		User testUser = new User();
+		testUser.setName("testName");
+		testUser.setUsername("testUsername");
+		testUser.setEmail("test@example.com");
+		testUser.setPassword("Test1234!");
+		userService.createUser(testUser);
+
+		User loggedInUser = userService.loginUser("testUsername", null, "Test1234!");
+		String token = loggedInUser.getToken();
+		assertNotNull(token);	// verify that token is generated upon login
+
+		// WHEN the user logs out
+		userService.logoutByToken(token);
+
+		// THEN check that token in null in database
+		User userFromDB = userRepository.findByUsername("testUsername");
+		assertNull(userFromDB.getToken());
+	}
+
+	@Test  // test that user status is set to OFFLINE after logout
+	public void logoutUser_statusSetOffline() {
+		// GIVEN a logged in user
+		User testUser = new User();
+		testUser.setName("testName");
+		testUser.setUsername("testUsername");
+		testUser.setEmail("test@example.com");
+		testUser.setPassword("Test1234!");
+		userService.createUser(testUser);
+
+		User loggedInUser = userService.loginUser("testUsername", null, "Test1234!");
+		assertEquals(UserStatus.ONLINE, loggedInUser.getStatus());  // verify that user is ONLINE after login
+		
+		// WHEN the user logs out
+		userService.logoutByToken(loggedInUser.getToken());
+
+		// THEN check that user status is OFFLINE in the database
+		User userFromDB = userRepository.findByUsername("testUsername");
+		assertEquals(UserStatus.OFFLINE, userFromDB.getStatus());
+	}
+
+	@Test  // test that restricted pages cannot be accessed after logout (i.e. token is invalidated)
+	public void logoutUser_restrictedAccessAfterLogout() {
+		// GIVEN a logged in user
+		User testUser = new User();
+		testUser.setName("testName");
+		testUser.setUsername("testUsername");
+		testUser.setEmail("test@example.com");
+		testUser.setPassword("Test1234!");
+		userService.createUser(testUser);
+
+		User loggedInUser = userService.loginUser("testUsername", null, "Test1234!");
+		String token = loggedInUser.getToken();
+		
+		// WHEN the user logs out
+		userService.logoutByToken(token);
+
+		// THEN check that old token is not accepted by validateToken
+		assertThrows(ResponseStatusException.class, () -> userService.validateToken(token));
+	}
+
 }

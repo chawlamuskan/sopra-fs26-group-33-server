@@ -99,7 +99,7 @@ public class UserController {
 
 	// POST /users/logout - Logout user
 	@PostMapping("/users/logout")
-	@ResponseStatus(HttpStatus.OK)
+	@ResponseStatus(HttpStatus.NO_CONTENT) // POST /users/logout -> status code 204 (HttpStatus.NO_CONTENT)
 	public void logoutUser(
 			@RequestHeader(value = "Authorization", required = false) String token) {
 		userService.validateToken(token);
