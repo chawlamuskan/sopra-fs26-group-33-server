@@ -33,13 +33,14 @@ public class UserController {
 		this.userService = userService;
 	}
 
-	// Get all users
+	// GET /users - Get all users
 	@GetMapping("/users")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public List<UserGetDTO> getAllUsers(
 		@RequestHeader(value = "Authorization", required = false) String token) {
-			userService.validateToken(token); // validate token for authorization
+		
+		userService.validateToken(token); // validate token for authorization
 		
 		// fetch all users in the internal representation
 		List<User> users = userService.getUsers();
@@ -54,7 +55,7 @@ public class UserController {
 
 	// Register new user
 	@PostMapping("/users")
-	@ResponseStatus(HttpStatus.CREATED) // POST /users -> status code 201 (HttpStatus.CREATED)
+	@ResponseStatus(HttpStatus.CREATED) // POST /users 201 CREATED based on REST specifications
 	@ResponseBody
 	public UserGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
 		// convert API user to internal representation
@@ -65,12 +66,11 @@ public class UserController {
 		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
 	}
 
-	// Login user
+	// POST /login - Login user
 	@PostMapping("/login")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public UserGetDTO loginUser(@RequestBody UserLoginDTO loginDTO) {
-
 		User user = userService.loginUser(
 			loginDTO.getUsername(),
 			loginDTO.getEmail(),

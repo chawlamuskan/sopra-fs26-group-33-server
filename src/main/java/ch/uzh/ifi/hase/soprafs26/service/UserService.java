@@ -52,6 +52,7 @@ public class UserService {
 	}
 
 	// Check valid password format during registration and password change
+	// POST /users 400 BAD REQUEST
 	private void validatePassword(String password) {
 		if (password == null || password.length() < 8) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
@@ -75,11 +76,10 @@ public class UserService {
 	public User loginUser(String username, String email, String password) {
 		User user = null;
 		if (username != null && !username.trim().isEmpty()) {
-			user = userRepository.findByUsername(username);
+        	user = userRepository.findByUsername(username);
 		} else if (email != null && !email.trim().isEmpty()) {
 			user = userRepository.findByEmail(email);
 		}
-		// return error if user not found OR password does not match
 		if (user == null || !user.getPassword().equals(password)) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
 		}
@@ -91,9 +91,9 @@ public class UserService {
 
 	// added for getuser id for speficif user page 
 	public User getUserById(Long id) {
-    return userRepository.findById(id)
-        .orElseThrow(() ->
-            new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+		return userRepository.findById(id)
+			.orElseThrow(() ->
+				new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 	}
 
 	// had problem that after logging out with button the status stayed ONLINE - so need this 
@@ -143,19 +143,20 @@ public class UserService {
 
 	
 	// Check uniqueness criteria of the username and email #43
+	// POST /users 409 CONFLICT based on REST specifications
 	private void checkIfUserExists(User userToBeCreated) {
 		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
 		User userByEmail = userRepository.findByEmail(userToBeCreated.getEmail());
 
 		if (userByUsername != null && userByEmail != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
-				"Username and email are already taken");
+				"Registration failed: username & email already exist");
 		} else if (userByUsername != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
-				"Username is already taken");
+				"Registration failed: username already exists");
 		} else if (userByEmail != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, 
-				"Email is already taken");
+				"Registration failed: email already exists");
 		}
 	}
 

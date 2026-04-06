@@ -36,9 +36,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * UserControllerTest
- * This is a WebMvcTest which allows to test the UserController 
- * i.e. GET/POST request without actually sending them over the network.
- * This tests if the UserController works.
+ * - simulates HTTP requests i.e. GET/POST (no actual network calls) to test the UserController
+ * - mocks the UserService (no actual service or database operations are performed)
+ * - tests that the controller correctly handles HTTP requests and returns the right responses (status codes and response bodies)
+ * 
+ * Detects:
+ * - wrong HTTP status codes returned by the controller
+ * - wrong response body returned by the controller
  */
 @WebMvcTest(UserController.class)
 public class UserControllerTest {
@@ -78,6 +82,37 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$[0].username", is(user.getUsername())))
 				.andExpect(jsonPath("$[0].email", is(user.getEmail())))
 				.andExpect(jsonPath("$[0].status", is(user.getStatus().toString())));
+	}
+
+	@Test 	// test that restricted pages are inaccessible without token
+	public void getUsers_noToken_returnsUnauthorized() throws Exception {
+		// GIVEN no token provided in the request header
+		Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided"))
+				.when(userService).validateToken(Mockito.isNull());
+
+		// WHEN performing GET request to /users without Authorization header
+		MockHttpServletRequestBuilder getRequest = get("/users")
+			.contentType(MediaType.APPLICATION_JSON);
+
+		// THEN return 401 UNAUTHORIZED
+		mockMvc.perform(getRequest)
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test 	// test that restricted pages are inaccessible with invalid token
+	public void getUsers_invalidToken_returnsUnauthorized() throws Exception {
+		// GIVEN invalid token provided in the request header
+		Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token"))
+				.when(userService).validateToken(Mockito.eq("invalid-token"));
+		
+		// WHEN performing GET request to /users with invalid token in Authorization header
+		MockHttpServletRequestBuilder getRequest = get("/users")
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", "invalid-token");
+
+		// THEN return 401 UNAUTHORIZED
+		mockMvc.perform(getRequest)
+			.andExpect(status().isUnauthorized());
 	}
 
 	// ================ POST /users TESTS ================
@@ -174,6 +209,7 @@ public class UserControllerTest {
 		mockMvc.perform(postRequest)
 				.andExpect(status().isBadRequest()); // HTTP 400
 	}
+
 
 	// ================ POST /login TESTS ================
 	@Test
