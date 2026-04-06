@@ -97,12 +97,13 @@ public class UserController {
 		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
 	}
 
-	// Logout - if I am logged in in specific user site 
-	@PostMapping("/logout/{id}")
+	// POST /users/logout - Logout user
+	@PostMapping("/users/logout")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	public void logoutUser(@PathVariable Long id) {
-		userService.logoutUser(id);
+	public void logoutUser(
+			@RequestHeader(value = "Authorization", required = false) String token) {
+		userService.validateToken(token);
+		userService.logoutByToken(token);
 	}
 
 	// Update user information (user will be logged out after password change)

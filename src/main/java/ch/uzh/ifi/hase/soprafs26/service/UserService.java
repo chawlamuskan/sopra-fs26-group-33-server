@@ -96,11 +96,14 @@ public class UserService {
 				new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 	}
 
-	// had problem that after logging out with button the status stayed ONLINE - so need this 
-	public void logoutUser(Long userId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-		user.setStatus(UserStatus.OFFLINE);
+	// Loogout user by token
+	public void logoutByToken(String token) {
+		User user = userRepository.findByToken(token);
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+		user.setStatus(UserStatus.OFFLINE);	// set status to OFFLINE on logout
+		user.setToken(null); // invalidate token on logout
 		userRepository.save(user);
 	}
 
@@ -135,12 +138,10 @@ public class UserService {
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
 		}
+		if (user.getStatus() == UserStatus.OFFLINE) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not logged in");
+		}
 	}
-
-	//public User getUserByToken(String token) {
-	//	return userRepository.findByToken(token);
-	//}
-
 	
 	// Check uniqueness criteria of the username and email #43
 	// POST /users 409 CONFLICT based on REST specifications
@@ -160,5 +161,4 @@ public class UserService {
 		}
 	}
 
-	
 }
