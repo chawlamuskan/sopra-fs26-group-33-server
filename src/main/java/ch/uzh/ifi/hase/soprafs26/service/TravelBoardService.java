@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
@@ -37,10 +38,9 @@ public class TravelBoardService {
 		return this.travelBoardRepository.findAll();
 	}
 
-	public TravelBoard createTravelBoard(TravelBoard newTravelBoard, Long ownerId) {
-        User owner = userRepository.findById(ownerId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Owner not found"));
-        
+	public TravelBoard createTravelBoard(TravelBoard newTravelBoard, String token) {
+        User owner = userRepository.findByToken(token);
+
         if (newTravelBoard.getName() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Board name cannot be empty");
         }
@@ -63,7 +63,9 @@ public class TravelBoardService {
         return newTravelBoard;
 	}
 
-    public void renameTravelBoard(Long boardId, Long userId, String newName){
+    public void renameTravelBoard(Long boardId, String token, String newName){
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
 
@@ -81,7 +83,9 @@ public class TravelBoardService {
     }
 
 
-    public void deleteTravelBoard(Long boardId, Long userId){
+    public void deleteTravelBoard(Long boardId, String token){
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
 
@@ -92,7 +96,9 @@ public class TravelBoardService {
         travelBoardRepository.delete(board);
     }
 
-    public List<TravelBoard> getTravelBoardsByUser(Long userId) {
+    public List<TravelBoard> getTravelBoardsByUser(String token) {
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
         List<TravelBoard> ownerBoards = travelBoardRepository.findByOwnerId(userId);
         List<TravelBoard> memberBoards = travelBoardRepository.findByMembersId(userId);
 
@@ -116,9 +122,9 @@ public class TravelBoardService {
         return board.getInviteCode();
     }
 
-    public void joinTravelBoardByInviteCode(Long userId, String inviteCode){
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+    public void joinTravelBoardByInviteCode(String token, String inviteCode){
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
 
         TravelBoard board = travelBoardRepository.findByInviteCode(inviteCode);
 
