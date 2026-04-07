@@ -38,63 +38,77 @@ public class UserService {
 		return this.userRepository.findAll();
 	}
 
-	// mpdified this part  to handle password bio creationdate
-
+	// Register new user
 	public User createUser(User newUser) {
-    // check if username or name already exists
-    checkIfUserExists(newUser);
+		checkIfUserExists(newUser);	// check if username or name already exists
+		validatePassword(newUser.getPassword()); // validate password format
+		newUser.setToken(UUID.randomUUID().toString()); // set default values
+		newUser.setStatus(UserStatus.ONLINE);
+		newUser.setCreationDate(java.time.LocalDate.now());	// set creation date (added this to User.java)
+		newUser = userRepository.save(newUser);	// save the user with all fields including password and bio
 
-    // set default values
-    newUser.setToken(UUID.randomUUID().toString());
-    newUser.setStatus(UserStatus.ONLINE);
-
-    // set creation date (added this to User.java)
-    newUser.setCreationDate(java.time.LocalDate.now());
-
-    // save the user with all fields including password and bio
-    newUser = userRepository.save(newUser);
-
-    log.debug("Created Information for User: {}", newUser);
-    return newUser;
+		log.debug("Created Information for User: {}", newUser);
+		return newUser;
 	}
 
-	// added for user
+	// Check valid password format during registration and password change
+	// POST /users 400 BAD REQUEST
+	private void validatePassword(String password) {
+		if (password == null || password.length() < 8) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Password must be at least 8 characters long");
+		}
+		if (!password.matches(".*[A-Z].*")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Password must contain at least one uppercase letter");
+		}
+		if (!password.matches(".*[0-9].*")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Password must contain at least one number");
+		}
+		if (!password.matches(".*[^a-zA-Z0-9].*")) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Password must contain at least one special character");
+		}
+	}
 
-	public User loginUser(String username, String password) {
+	// Login user (with username/email and password)
+	public User loginUser(String username, String email, String password) {
+		User user = null;
+		if (username != null && !username.trim().isEmpty()) {
+        	user = userRepository.findByUsername(username);
+		} else if (email != null && !email.trim().isEmpty()) {
+			user = userRepository.findByEmail(email);
+		}
+		if (user == null || !user.getPassword().equals(password)) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+		}
+		user.setStatus(UserStatus.ONLINE);
+		user.setToken(UUID.randomUUID().toString());
 
-    User user = userRepository.findByUsername(username);
-
-    if (user == null || !user.getPassword().equals(password)) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-    }
-
-    user.setStatus(UserStatus.ONLINE);
-    user.setToken(UUID.randomUUID().toString());
-
-    return userRepository.save(user);
+		return userRepository.save(user);
 	}
 
 	// added for getuser id for speficif user page 
 	public User getUserById(Long id) {
-    return userRepository.findById(id)
-        .orElseThrow(() ->
-            new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+		return userRepository.findById(id)
+			.orElseThrow(() ->
+				new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 	}
 
-	// had problem that after logging out with button the status stayed ONLINE - so need this 
-	public void logoutUser(Long userId) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-    user.setStatus(UserStatus.OFFLINE);
-    userRepository.save(user);
+	// Loogout user by token
+	public void logoutByToken(String token) {
+		User user = userRepository.findByToken(token);
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+		user.setStatus(UserStatus.OFFLINE);	// set status to OFFLINE on logout
+		user.setToken(null); // invalidate token on logout
+		userRepository.save(user);
 	}
 
-	// for user story 3 i need to update the password 
-	/**
-     * Update the user's own password.
-     * This method does not require Authorization header because frontend ensures
-     * only logged-in users can access their own profile.
-     */
+	// Update user's password (only logged-in users can access their own profile)
+    // This method does not require Authorization header because frontend ensures
     public void updatePassword(Long userId, String newPassword) {
         // Find the user
         User user = userRepository.findById(userId)
@@ -104,6 +118,7 @@ public class UserService {
         if (newPassword == null || newPassword.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty");
         }
+		validatePassword(newPassword); 	// validate new password adheres to required format
 
         // Update password
         user.setPassword(newPassword);
@@ -114,7 +129,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-	// ADDED: validate that the token exists and belongs to a real logged-in user
+	// Validate that the token exists and belongs to a real logged-in user
 	public void validateToken(String token) {
 		if (token == null || token.trim().isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided");
@@ -123,35 +138,27 @@ public class UserService {
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
 		}
-	}
-
-	//public User getUserByToken(String token) {
-	//	return userRepository.findByToken(token);
-	//}
-
-	
-	/**
-	 * This is a helper method that will check the uniqueness criteria of the
-	 * username and the name
-	 * defined in the User entity. The method will do nothing if the input is unique
-	 * and throw an error otherwise.
-	 *
-	 * @param userToBeCreated
-	 * @throws org.springframework.web.server.ResponseStatusException
-	 * @see User
-	 */
-	private void checkIfUserExists(User userToBeCreated) {
-		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-		User userByName = userRepository.findByName(userToBeCreated.getName());
-
-		String baseErrorMessage = "The %s provided %s not unique. Therefore, the user could not be created!";
-		if (userByUsername != null && userByName != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT,
-					String.format(baseErrorMessage, "username and the name", "are"));
-		} else if (userByUsername != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, String.format(baseErrorMessage, "username", "is"));
-		} else if (userByName != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, String.format(baseErrorMessage, "name", "is"));
+		if (user.getStatus() == UserStatus.OFFLINE) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not logged in");
 		}
 	}
+	
+	// Check uniqueness criteria of the username and email #43
+	// POST /users 409 CONFLICT based on REST specifications
+	private void checkIfUserExists(User userToBeCreated) {
+		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
+		User userByEmail = userRepository.findByEmail(userToBeCreated.getEmail());
+
+		if (userByUsername != null && userByEmail != null) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+				"Registration failed: username & email already exist");
+		} else if (userByUsername != null) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+				"Registration failed: username already exists");
+		} else if (userByEmail != null) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, 
+				"Registration failed: email already exists");
+		}
+	}
+
 }
