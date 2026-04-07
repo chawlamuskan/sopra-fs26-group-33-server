@@ -23,6 +23,7 @@ import java.util.List;
  * The controller will receive the request and delegate the execution to the
  * UserService and finally return the result.
  */
+
 @RestController
 public class UserController {
 
@@ -32,12 +33,15 @@ public class UserController {
 		this.userService = userService;
 	}
 
+	// GET /users - Get all users
 	@GetMapping("/users")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public List<UserGetDTO> getAllUsers(
 		@RequestHeader(value = "Authorization", required = false) String token) {
-			userService.validateToken(token); // validate token for authorization
+		
+		userService.validateToken(token); // validate token for authorization
+		
 		// fetch all users in the internal representation
 		List<User> users = userService.getUsers();
 		List<UserGetDTO> userGetDTOs = new ArrayList<>();
@@ -49,39 +53,38 @@ public class UserController {
 		return userGetDTOs;
 	}
 
+	// Register new user
 	@PostMapping("/users")
-	@ResponseStatus(HttpStatus.CREATED)
+	@ResponseStatus(HttpStatus.CREATED) // POST /users 201 CREATED based on REST specifications
 	@ResponseBody
 	public UserGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
 		// convert API user to internal representation
 		User userInput = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
-
 		// create user
 		User createdUser = userService.createUser(userInput);
 		// convert internal representation of user back to API
 		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
 	}
 
-	// added for login 
-
+	// POST /login - Login user
 	@PostMapping("/login")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public UserGetDTO loginUser(@RequestBody UserLoginDTO loginDTO) {
-
 		User user = userService.loginUser(
 			loginDTO.getUsername(),
+			loginDTO.getEmail(),
 			loginDTO.getPassword()
 		);
 
+		// do not return raw user, that would expose sensitive data (like password)
+		// use mapper to strip away sensitive data
 		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user); 
-		// i need to return this and not the raw user bc that could expose raw data like passowrd
-		// so send it to service and convert then via mapper to ensure data safety 
 	}
 
-	// added fpr specific user login
+	// Get specific user
 	@GetMapping("/users/{id}")
-	@ResponseStatus(HttpStatus.OK)
+	@ResponseStatus(HttpStatus.OK) // GET /users/{id} -> status code 200 (HttpStatus.OK)
 	@ResponseBody
 	public UserGetDTO getUser(@PathVariable Long id,
 		@RequestHeader(value = "Authorization", required = false) String token) {
@@ -94,21 +97,22 @@ public class UserController {
 		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
 	}
 
-	// added for logout if i am logged in in specific user site 
-	@PostMapping("/logout/{id}")
-	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	public void logoutUser(@PathVariable Long id) {
-		userService.logoutUser(id);
+	// POST /users/logout - Logout user
+	@PostMapping("/users/logout")
+	@ResponseStatus(HttpStatus.NO_CONTENT) // POST /users/logout -> status code 204 (HttpStatus.NO_CONTENT)
+	public void logoutUser(
+			@RequestHeader(value = "Authorization", required = false) String token) {
+		userService.validateToken(token);
+		userService.logoutByToken(token);
 	}
 
-	// added for updating password - user will be logged out after password change
+	// Update user information (user will be logged out after password change)
 	@PutMapping("/users/{id}")
-	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseStatus(HttpStatus.NO_CONTENT) // PUT /users/{id} -> status code 204 (HttpStatus.NO_CONTENT)
 	@ResponseBody
 	public void updateUser(
-			@PathVariable Long id,
-			@RequestBody UserPutDTO userPutDTO) {
+		@PathVariable Long id,
+		@RequestBody UserPutDTO userPutDTO) {
 
 		// Fetch the user by id
 		User user = userService.getUserById(id);
@@ -117,7 +121,6 @@ public class UserController {
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
 		}
-
 		userService.updatePassword(id, userPutDTO.getPassword());
 	}
 
