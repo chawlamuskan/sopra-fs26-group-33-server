@@ -5,6 +5,9 @@ import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
@@ -23,6 +26,8 @@ public interface DTOMapper {
 
 	DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
+
+	// ==================== User Mappings ====================
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "username", target = "username")
 	@Mapping(source = "email", target = "email")
@@ -42,6 +47,7 @@ public interface DTOMapper {
 	UserGetDTO convertEntityToUserGetDTO(User user);
 	// Do not expose data like password or token to client 
 
+	// ==================== TravelBoard Mappings ====================
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "startDate", target = "startDate")
 	@Mapping(source = "endDate", target = "endDate")
@@ -57,4 +63,16 @@ public interface DTOMapper {
 	@Mapping(source = "privacy", target = "privacy")
 	@Mapping(source = "dateCreated", target = "dateCreated")
     TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
+
+	// ==================== Preferences Mappings ====================
+	@Mapping(source = "profilePictureURL", target = "profilePictureURL")
+	@Mapping(source = "visitedCountries", target = "visitedCountries")
+	@Mapping(source = "wishlistCountries", target = "wishlistCountries")
+	Preferences convertPreferencesPostDTOtoEntity(PreferencesPostDTO preferencesPostDTO);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "profilePictureURL", target = "profilePictureURL")
+	@Mapping(source = "visitedCountries", target = "visitedCountries")
+	@Mapping(source = "wishlistCountries", target = "wishlistCountries")
+	PreferencesGetDTO convertEntityToPreferencesGetDTO(Preferences preferences);
 }
