@@ -33,7 +33,7 @@ public class TravelBoardController {
 	@PostMapping("/travelboards")
 	@ResponseStatus(HttpStatus.CREATED)
 	@ResponseBody
-	public TravelBoardGetDTO createTravelBoardGetDTO(@RequestBody TravelBoardPostDTO travelBoardPostDTO, @RequestHeader(value = "Authorization", required = false) String token) {
+	public TravelBoardGetDTO createTravelBoard(@RequestBody TravelBoardPostDTO travelBoardPostDTO, @RequestHeader(value = "Authorization", required = false) String token) {
         userService.validateToken(token);
 
 		TravelBoard travelBoardInput = DTOMapper.INSTANCE.convertTravelBoardPostDTOtoEntity(travelBoardPostDTO);
