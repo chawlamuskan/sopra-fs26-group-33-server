@@ -37,5 +37,23 @@ public class InvitationController {
 		return DTOMapper.INSTANCE.convertEntityToInvitationGetDTO(createdInvitation);
 	}
 
+	@PutMapping("/invitations/{invitationId}/accept")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseBody
+	public void acceptInvitation(@RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long invitationId) {
+		userService.validateToken(token);
+
+		invitationService.acceptInvitation(invitationId, token);
+	}	
+
+	@PutMapping("/invitations/{invitationId}/decline")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseBody
+	public void declineInvitation(@RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long invitationId) {
+		userService.validateToken(token);
+
+		invitationService.declineInvitation(invitationId, token);
+	}	
+
 
 }

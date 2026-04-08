@@ -72,4 +72,49 @@ public class InvitationService {
         return newInvitation;
 	}
 
+    public void acceptInvitation(Long invitationId, String token){
+        Invitation invitation = invitationRepository.findById(invitationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found"));
+
+        User user = userRepository.findByToken(token);
+
+        if (!invitation.getReceiver().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - not your invitation");
+        }
+
+        if (invitation.getStatus() != InviteStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invitation was already answered");
+        }
+
+        TravelBoard board = invitation.getBoard();
+
+        if(board.getOwner().getId().equals(user.getId()) || board.getMembers().contains(user)){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already a member of this board");
+        }
+
+        board.getMembers().add(user);
+        travelBoardRepository.save(board);
+
+        invitation.setStatus(InviteStatus.ACCEPTED);
+        invitationRepository.save(invitation);
+    }
+
+    public void declineInvitation(Long invitationId, String token){
+        Invitation invitation = invitationRepository.findById(invitationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found"));
+
+        User user = userRepository.findByToken(token);
+
+        if (!invitation.getReceiver().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - not your invitation");
+        }
+
+        if (invitation.getStatus() != InviteStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invitation was already answered");
+        }
+
+        invitation.setStatus(InviteStatus.DECLINED);
+        invitationRepository.save(invitation);
+    }
+
 }
