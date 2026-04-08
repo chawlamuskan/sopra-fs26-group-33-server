@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
@@ -15,9 +16,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 
@@ -39,10 +38,9 @@ public class TravelBoardService {
 		return this.travelBoardRepository.findAll();
 	}
 
-	public TravelBoard createTravelBoard(TravelBoard newTravelBoard, Long ownerId) {
-        User owner = userRepository.findById(ownerId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Owner not found"));
-        
+	public TravelBoard createTravelBoard(TravelBoard newTravelBoard, String token) {
+        User owner = userRepository.findByToken(token);
+
         if (newTravelBoard.getName() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Board name cannot be empty");
         }
@@ -55,7 +53,6 @@ public class TravelBoardService {
             }
 
         newTravelBoard.setOwner(owner);
-        newTravelBoard.getMembers().add(owner);
         newTravelBoard.setInviteCode(UUID.randomUUID().toString().substring(0, 8));
         newTravelBoard.setDateCreated(LocalDate.now());
 
@@ -66,7 +63,9 @@ public class TravelBoardService {
         return newTravelBoard;
 	}
 
-    public TravelBoard renameTravelBoard(Long boardId, Long userId, String newName){
+    public void renameTravelBoard(Long boardId, String token, String newName){
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
 
@@ -81,11 +80,12 @@ public class TravelBoardService {
         board.setName(newName.trim());
         board = travelBoardRepository.save(board);
 
-        return board;
     }
 
 
-    public void deleteTravelBoard(Long boardId, Long userId){
+    public void deleteTravelBoard(Long boardId, String token){
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
 
@@ -96,7 +96,9 @@ public class TravelBoardService {
         travelBoardRepository.delete(board);
     }
 
-    public List<TravelBoard> getTravelBoardsByUser(Long userId) {
+    public List<TravelBoard> getTravelBoardsByUser(String token) {
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
         List<TravelBoard> ownerBoards = travelBoardRepository.findByOwnerId(userId);
         List<TravelBoard> memberBoards = travelBoardRepository.findByMembersId(userId);
 
@@ -111,5 +113,30 @@ public class TravelBoardService {
         }
 
         return result;
+    }
+
+    public String getInviteCode(Long boardId) {
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+        
+        return board.getInviteCode();
+    }
+
+    public void joinTravelBoardByInviteCode(String token, String inviteCode){
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
+
+        TravelBoard board = travelBoardRepository.findByInviteCode(inviteCode);
+
+        if (board == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invite code is invalid");
+        }
+
+        if (board.getMembers().contains(user) || board.getOwner().getId().equals(userId)){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already a member of this board");
+        }
+
+        board.getMembers().add(user);
+        travelBoardRepository.save(board);        
     }
 }
