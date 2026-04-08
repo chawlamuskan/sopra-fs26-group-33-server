@@ -29,7 +29,7 @@ public class InvitationController {
 	@PostMapping("/travelboards/{boardId}/invitations")
 	@ResponseStatus(HttpStatus.CREATED)
 	@ResponseBody
-	public InvitationGetDTO createInvitationGetDTO(@RequestBody InvitationPostDTO invitationPostDTO, @RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long boardId) {
+	public InvitationGetDTO createInvitation(@RequestBody InvitationPostDTO invitationPostDTO, @RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long boardId) {
 		userService.validateToken(token);
 
 		Invitation createdInvitation = invitationService.createInvitation(boardId, token, invitationPostDTO.getReceiverId());
