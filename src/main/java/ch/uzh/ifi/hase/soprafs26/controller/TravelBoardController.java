@@ -61,10 +61,10 @@ public class TravelBoardController {
         travelBoardService.deleteTravelBoard(boardId, token);
     }
 
-    @GetMapping("/travelboards/my")
+    @GetMapping("/travelboards")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token){
+    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token, @RequestParam String user){
         userService.validateToken(token);
         List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByUser(token);
 

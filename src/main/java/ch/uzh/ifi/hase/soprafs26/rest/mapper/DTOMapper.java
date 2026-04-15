@@ -47,6 +47,7 @@ public interface DTOMapper {
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "startDate", target = "startDate")
 	@Mapping(source = "endDate", target = "endDate")
+	@Mapping(source = "inviteCode", target = "inviteCode")
 	@Mapping(source = "privacy", target = "privacy")
     TravelBoard convertTravelBoardPostDTOtoEntity(TravelBoardPostDTO travelBoardPostDTO);
 

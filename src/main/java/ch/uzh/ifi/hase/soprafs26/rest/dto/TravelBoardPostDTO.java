@@ -14,6 +14,8 @@ public class TravelBoardPostDTO {
 
 	private LocalDate endDate;
 
+	private String inviteCode;
+
 	private PrivacyLevel privacy; 			
 
 
@@ -41,6 +43,13 @@ public class TravelBoardPostDTO {
 		this.endDate = endDate;
 	}
 
+	public String getInviteCode() {
+        return inviteCode;
+    }
+
+    public void setInviteCode(String inviteCode) {
+        this.inviteCode = inviteCode;
+    }
 
 	public PrivacyLevel getPrivacy() {
 		return privacy;

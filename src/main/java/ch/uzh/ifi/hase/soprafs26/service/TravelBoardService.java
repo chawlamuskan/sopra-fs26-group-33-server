@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
@@ -17,7 +16,6 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 
 @Service
@@ -50,10 +48,15 @@ public class TravelBoardService {
         if (newTravelBoard.getStartDate() != null && newTravelBoard.getEndDate() != null
             && newTravelBoard.getStartDate().isAfter(newTravelBoard.getEndDate())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date cannot be after end date");
-            }
+        }
+        if (newTravelBoard.getInviteCode() == null || newTravelBoard.getInviteCode().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invite code cannot be empty");
+        }
+        if (travelBoardRepository.findByInviteCode(newTravelBoard.getInviteCode()) != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invite code already exists");
+        }
 
         newTravelBoard.setOwner(owner);
-        newTravelBoard.setInviteCode(UUID.randomUUID().toString().substring(0, 8));
         newTravelBoard.setDateCreated(LocalDate.now());
 
 
