@@ -63,6 +63,13 @@ public class TravelBoardController {
         travelBoardService.deleteTravelBoard(boardId, token);
     }
 
+    @DeleteMapping("/travelboards/{boardId}/membership")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveTravelBoard(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token) {
+        userService.validateToken(token);
+        travelBoardService.leaveTravelBoard(boardId, token);
+      }
+
     @GetMapping("/travelboards")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
@@ -106,5 +113,6 @@ public class TravelBoardController {
 
         travelBoardService.addPlaces(boardId, token, placeInput);
     }
+
 
 }

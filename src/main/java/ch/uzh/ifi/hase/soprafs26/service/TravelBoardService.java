@@ -103,6 +103,24 @@ public class TravelBoardService {
         travelBoardRepository.delete(board);
     }
 
+    public void leaveTravelBoard(Long boardId, String token) {
+        User user = userRepository.findByToken(token);
+
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+
+        if (board.getOwner().getId().equals(user.getId())) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot leave the board with this action");
+        }
+
+        if (!board.getMembers().contains(user)) {
+          throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User is not a member of this travel board");
+        }
+
+        board.getMembers().remove(user);
+        travelBoardRepository.save(board);
+    }
+
     public List<TravelBoard> getTravelBoardsByUser(String token) {
         User user = userRepository.findByToken(token);
         Long userId = user.getId();
