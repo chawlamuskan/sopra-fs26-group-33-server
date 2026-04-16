@@ -4,9 +4,11 @@ import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
+import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InvitationGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
@@ -69,4 +71,8 @@ public interface DTOMapper {
 	@Mapping(source = "status", target = "status")
     InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
 
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "latitude", target = "latitude")
+	@Mapping(source = "longitude", target = "longitude")
+    Place convertPlacePostDTOtoEntity(PlacePostDTO placePostDTO);
 }

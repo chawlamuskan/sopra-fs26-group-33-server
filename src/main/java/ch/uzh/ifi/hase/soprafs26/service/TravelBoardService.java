@@ -8,10 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.PlaceRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -26,10 +28,12 @@ public class TravelBoardService {
 
 	private final TravelBoardRepository travelBoardRepository;
     private final UserRepository userRepository;
+    private final PlaceRepository placeRepository;
 
-	public TravelBoardService(@Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository, UserRepository userRepository) {
+	public TravelBoardService(@Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository, UserRepository userRepository, PlaceRepository placeRepository) {
 		this.travelBoardRepository = travelBoardRepository;
         this.userRepository = userRepository;
+        this.placeRepository = placeRepository;
 	}
 
 	public List<TravelBoard> getTravelBoards() {
@@ -142,4 +146,25 @@ public class TravelBoardService {
         board.getMembers().add(user);
         travelBoardRepository.save(board);        
     }
+
+    public void addPlaces(Long boardId, String token, Place newPlace) {
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
+
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+
+        if (!board.getOwner().getId().equals(userId) && !(board.getMembers().contains(user))) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Only board members can add places");
+        }
+
+        if (newPlace.getLatitude() == null || newPlace.getLongitude() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Latitude and longitude are required");
+        }
+
+        Place savedPlace = placeRepository.save(newPlace);
+        board.getPlaces().add(savedPlace);
+        travelBoardRepository.save(board);
+
+    }   
 }
