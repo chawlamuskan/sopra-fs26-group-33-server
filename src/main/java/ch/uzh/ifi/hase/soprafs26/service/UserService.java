@@ -161,4 +161,12 @@ public class UserService {
 		}
 	}
 
+	public List<User> searchUsersByUsername(String token, String username) {
+  		if (username == null || username.trim().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username query must not be empty");	
+		}
+
+		return userRepository.findByUsernameContainingIgnoreCase(username.trim());
+	}
+
 }

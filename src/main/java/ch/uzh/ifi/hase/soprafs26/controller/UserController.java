@@ -124,4 +124,20 @@ public class UserController {
 		userService.updatePassword(id, userPutDTO.getPassword());
 	}
 
+	//shows matching users while typing
+	@GetMapping("/users/search")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<UserGetDTO> searchUsersByUsername(@RequestHeader(value = "Authorization", required = false) String token, @RequestParam String username) {
+		userService.validateToken(token);
+	  	List<User> users = userService.searchUsersByUsername(token, username);
+	  	List<UserGetDTO> userGetDTOs = new ArrayList<>();
+		
+	  	for (User user : users) {
+	    	userGetDTOs.add(DTOMapper.INSTANCE.convertEntityToUserGetDTO(user));
+	  	}
+  
+	 	return userGetDTOs;
+	}
+
 }
