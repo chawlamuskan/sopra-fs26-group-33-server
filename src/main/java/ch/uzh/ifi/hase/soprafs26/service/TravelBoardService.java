@@ -56,7 +56,7 @@ public class TravelBoardService {
         if (newTravelBoard.getInviteCode() == null || newTravelBoard.getInviteCode().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invite code cannot be empty");
         }
-        if (travelBoardRepository.findByInviteCode(newTravelBoard.getInviteCode().trim().isEmpty()) != null) {
+        if (travelBoardRepository.findByInviteCode(newTravelBoard.getInviteCode()) != null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invite code already exists");
         }
 
