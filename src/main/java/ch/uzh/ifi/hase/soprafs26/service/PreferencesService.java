@@ -37,23 +37,29 @@ public class PreferencesService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         
-        Preferences existingPreferences = preferencesRepository.findByUser(user);
+        Preferences existing = preferencesRepository.findByUser(user);
 
-        if (existingPreferences == null) {
+        if (existing == null) {
             newPreferences.setUser(user);
             return preferencesRepository.save(newPreferences);
         }
 
-        if (newPreferences.getProfilePictureURL() != null) {
-            existingPreferences.setProfilePictureURL(newPreferences.getProfilePictureURL());
+        if (newPreferences.getBio() != null) {
+            existing.setBio(newPreferences.getBio());
+        }
+        if (newPreferences.getProfilePicture() != null) {
+            existing.setProfilePicture(newPreferences.getProfilePicture());
         }
         if (newPreferences.getVisitedCountries() != null) {
-            existingPreferences.setVisitedCountries(newPreferences.getVisitedCountries());
+            existing.setVisitedCountries(newPreferences.getVisitedCountries());
         }
         if (newPreferences.getWishlistCountries() != null) {
-            existingPreferences.setWishlistCountries(newPreferences.getWishlistCountries());
+            existing.setWishlistCountries(newPreferences.getWishlistCountries());
         }
-        return preferencesRepository.save(existingPreferences);
+        if (newPreferences.getFriends() != null) {
+            existing.setFriends(newPreferences.getFriends());
+        }
+        return preferencesRepository.save(existing);
 
     }
 	

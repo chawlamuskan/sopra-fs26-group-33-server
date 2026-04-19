@@ -41,9 +41,11 @@ public class PreferencesController {
         userService.validateToken(token);
 
 		Preferences preferences = new Preferences();
-        preferences.setProfilePictureURL(preferencesPostDTO.getProfilePictureURL());
+		preferences.setBio(preferencesPostDTO.getBio());
+        preferences.setProfilePicture(preferencesPostDTO.getProfilePicture());
         preferences.setVisitedCountries(preferencesPostDTO.getVisitedCountries());
         preferences.setWishlistCountries(preferencesPostDTO.getWishlistCountries());
+		preferences.setFriends(preferencesPostDTO.getFriends());
 
         Preferences savedPreferences = preferencesService.savePreferences(userId, preferences);
         return DTOMapper.INSTANCE.convertEntityToPreferencesGetDTO(savedPreferences);

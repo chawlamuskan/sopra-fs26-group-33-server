@@ -65,14 +65,18 @@ public interface DTOMapper {
     TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
 
 	// ==================== Preferences Mappings ====================
-	@Mapping(source = "profilePictureURL", target = "profilePictureURL")
+	@Mapping(source = "bio", target = "bio")
+	@Mapping(source = "profilePicture", target = "profilePicture")
 	@Mapping(source = "visitedCountries", target = "visitedCountries")
 	@Mapping(source = "wishlistCountries", target = "wishlistCountries")
+	@Mapping(source = "friends", target = "friends")
 	Preferences convertPreferencesPostDTOtoEntity(PreferencesPostDTO preferencesPostDTO);
 
 	@Mapping(source = "id", target = "id")
-	@Mapping(source = "profilePictureURL", target = "profilePictureURL")
+	@Mapping(source = "bio", target = "bio")
+	@Mapping(source = "profilePicture", target = "profilePicture")
 	@Mapping(source = "visitedCountries", target = "visitedCountries")
 	@Mapping(source = "wishlistCountries", target = "wishlistCountries")
+	@Mapping(source = "friends", target = "friends")
 	PreferencesGetDTO convertEntityToPreferencesGetDTO(Preferences preferences);
 }
