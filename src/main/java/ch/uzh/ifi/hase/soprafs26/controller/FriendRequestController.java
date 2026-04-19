@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.FriendRequestGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.FriendRequestPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.FriendRequestService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
@@ -72,6 +74,29 @@ public class FriendRequestController {
 		userService.validateToken(token);
 
 		friendRequestService.declineFriendRequest(friendRequestId, token);
+	}
+
+	@GetMapping("/friends")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<UserGetDTO> getFriends(@RequestHeader(value = "Authorization", required = false) String token) {
+		userService.validateToken(token);
+
+		List<User> friends = friendRequestService.getFriends(token);
+
+		List<UserGetDTO> friendsDTOs = new ArrayList<>();
+
+		for (User friend : friends) {
+            friendsDTOs.add(DTOMapper.INSTANCE.convertEntityToUserGetDTO(friend));
+        }
+		return friendsDTOs;
+	}
+
+	@DeleteMapping("/friends/{friendId}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void removeFriend(@RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long friendId) {
+	    userService.validateToken(token);
+	    friendRequestService.removeFriend(token, friendId);
 	}
 
 

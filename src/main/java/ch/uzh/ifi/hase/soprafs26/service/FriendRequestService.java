@@ -128,5 +128,30 @@ public class FriendRequestService {
         friendRequestRepository.save(friendRequest);
     }
 
+    public List<User> getFriends(String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+        }
+
+        return user.getFriends();
+    }
+
+    public void removeFriend(String token, Long friendId) {
+        User user = userRepository.findByToken(token);
+
+        User friend = userRepository.findById(friendId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Friend not found"));
+
+        if (!user.getFriends().contains(friend)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users are not friends");
+        }
+
+        user.getFriends().remove(friend);
+        friend.getFriends().remove(user);
+
+        userRepository.save(user);
+        userRepository.save(friend);
+    }
 
 }
