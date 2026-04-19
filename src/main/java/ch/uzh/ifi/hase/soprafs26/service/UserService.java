@@ -11,9 +11,14 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedCountryDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
 
 /**
  * User Service
@@ -169,4 +174,39 @@ public class UserService {
 		return userRepository.findByUsernameContainingIgnoreCase(username.trim());
 	}
 
+	public List<SavedCountryDTO> getSavedCountries(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+		List<SavedCountryDTO> result = new ArrayList<>();
+
+		Set<String> visited = new HashSet<>(user.getCountriesVisited());
+
+		for (String country : user.getCountriesVisited()) {
+			result.add(new SavedCountryDTO(country, "visited"));
+		}
+		for (String country : user.getCountriesWishlist()) {
+			if (!visited.contains(country)) {
+				result.add(new SavedCountryDTO(country, "wishlist"));
+			}
+		}
+		return result;
+	}
+
+	public User updateUser(Long userId, UserPutDTO userPutDTO) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+		if (userPutDTO.getBio() != null) {
+			user.setBio(userPutDTO.getBio());
+		}
+		if (userPutDTO.getCountries_visited() != null) {
+			user.setCountriesVisited(userPutDTO.getCountries_visited());
+		}
+		if (userPutDTO.getCountries_wishlist() != null) {
+			user.setCountriesWishlist(userPutDTO.getCountries_wishlist());
+		}
+
+		return userRepository.save(user);
+	}
 }
