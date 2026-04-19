@@ -56,6 +56,14 @@ public class FriendRequestService {
         if (sender.getFriends().contains(receiver) || receiver.getFriends().contains(sender)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Users are already friends");
         }
+
+        FriendRequest pending1 = friendRequestRepository.findBySenderAndReceiverAndStatus(sender, receiver, FriendRequestStatus.PENDING);
+
+        FriendRequest pending2 = friendRequestRepository.findBySenderAndReceiverAndStatus(receiver, sender, FriendRequestStatus.PENDING);
+
+        if (pending1 != null || pending2 != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A pending friend request already exists");
+        }
         
         FriendRequest newFriendRequest = new FriendRequest();
         newFriendRequest.setStatus(FriendRequestStatus.PENDING);
