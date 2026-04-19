@@ -117,4 +117,14 @@ public class InvitationService {
         invitationRepository.save(invitation);
     }
 
+    public List<Invitation> getPendingInvitations(String token) {
+        User user = userRepository.findByToken(token);
+
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
+        }
+
+        return invitationRepository.findByReceiverAndStatus(user, InviteStatus.PENDING);
+    }
+
 }

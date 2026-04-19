@@ -69,6 +69,8 @@ public interface DTOMapper {
 	@Mapping(source = "sender.id", target = "senderId")
 	@Mapping(source = "receiver.id", target = "receiverId")
 	@Mapping(source = "status", target = "status")
+	@Mapping(source = "board.name", target = "boardName")
+	@Mapping(source = "sender.username", target = "senderUsername")
     InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
 
 	@Mapping(source = "name", target = "name")
