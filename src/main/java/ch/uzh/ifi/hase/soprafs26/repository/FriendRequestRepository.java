@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,6 +11,6 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 
 @Repository("friendRequestRepository")
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
-    FriendRequest findBySenderAndReceiverAndStatus(User sender, User receiver, FriendRequestStatus pending);
+    List<FriendRequest> findByReceiverAndStatus(User receiver, FriendRequestStatus status);
 	
 }

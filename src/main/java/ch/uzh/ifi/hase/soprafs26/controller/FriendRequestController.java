@@ -1,5 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +29,7 @@ public class FriendRequestController {
 	}
 
 
-	@PostMapping("/friendRequest")
+	@PostMapping("/friendRequests")
 	@ResponseStatus(HttpStatus.CREATED)
 	@ResponseBody
 	public FriendRequestGetDTO sendFriendRequest(@RequestBody FriendRequestPostDTO friendRequestPostDTO, @RequestHeader(value = "Authorization", required = false) String token) {
@@ -35,6 +38,40 @@ public class FriendRequestController {
 		FriendRequest createdRequest = friendRequestService.sendFriendRequest(token, friendRequestPostDTO.getReceiverId());
 
 		return DTOMapper.INSTANCE.convertEntityToFriendRequestGetDTO(createdRequest);
+	}
+
+	@GetMapping("/friendRequests")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<FriendRequestGetDTO> getPendingFriendRequests(@RequestHeader(value = "Authorization", required = false) String token) {
+		userService.validateToken(token);
+
+		List<FriendRequest> pendingFriendRequests = friendRequestService.getPendingFriendRequests(token);
+
+		List<FriendRequestGetDTO> friendRequestGetDTOs = new ArrayList<>();
+
+		for (FriendRequest friendRequest : pendingFriendRequests) {
+            friendRequestGetDTOs.add(DTOMapper.INSTANCE.convertEntityToFriendRequestGetDTO(friendRequest));
+        }
+		return friendRequestGetDTOs;
+	}
+
+	@PutMapping("/friendRequests/{friendRequestId}/accept")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseBody
+	public void acceptFriendRequest(@RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long friendRequestId) {
+		userService.validateToken(token);
+
+		friendRequestService.acceptFriendRequest(friendRequestId, token);
+	}	
+
+	@PutMapping("/friendRequests/{friendRequestId}/decline")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseBody
+	public void declineFriendRequest(@RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long friendRequestId) {
+		userService.validateToken(token);
+
+		friendRequestService.declineFriendRequest(friendRequestId, token);
 	}
 
 

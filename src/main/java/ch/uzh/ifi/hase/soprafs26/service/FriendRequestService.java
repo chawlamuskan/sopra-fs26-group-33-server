@@ -53,13 +53,7 @@ public class FriendRequestService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot send a friend request to yourself");
         }
 
-        FriendRequest accepted1 = friendRequestRepository.findBySenderAndReceiverAndStatus(
-            sender, receiver, FriendRequestStatus.ACCEPTED);
-
-        FriendRequest accepted2 = friendRequestRepository.findBySenderAndReceiverAndStatus(
-            receiver, sender, FriendRequestStatus.ACCEPTED);
-        
-        if (accepted1 != null || accepted2 != null) {
+        if (sender.getFriends().contains(receiver) || receiver.getFriends().contains(sender)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Users are already friends");
         }
         
@@ -73,6 +67,66 @@ public class FriendRequestService {
         log.debug("Created Information for FriendRequest: {}", newFriendRequest);
         return newFriendRequest;
 	}
+
+    public List<FriendRequest> getPendingFriendRequests(String token) {
+        User user = userRepository.findByToken(token);
+
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
+        }
+
+        return friendRequestRepository.findByReceiverAndStatus(user, FriendRequestStatus.PENDING);
+    }
+
+    public void acceptFriendRequest(Long friendRequestId, String token){
+        FriendRequest friendRequest = friendRequestRepository.findById(friendRequestId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FriendRequest not found"));
+
+        User user = userRepository.findByToken(token);
+
+        if (!friendRequest.getReceiver().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - not your friendRequest");
+        }
+
+        if (friendRequest.getStatus() != FriendRequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "FriendRequest was already answered");
+        }
+
+        User sender = friendRequest.getSender();
+        User receiver = friendRequest.getReceiver();
+
+        if (!sender.getFriends().contains(receiver)) {
+            sender.getFriends().add(receiver);
+        }
+
+        if (!receiver.getFriends().contains(sender)) {
+            receiver.getFriends().add(sender);
+        }
+
+        userRepository.save(sender);
+        userRepository.save(receiver);
+
+        friendRequest.setStatus(FriendRequestStatus.ACCEPTED);
+        friendRequestRepository.save(friendRequest);
+    }
+
+    public void declineFriendRequest(Long friendRequestId, String token){
+        FriendRequest friendRequest = friendRequestRepository.findById(friendRequestId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "FriendRequest not found"));
+
+        User user = userRepository.findByToken(token);
+
+        if (!friendRequest.getReceiver().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - not your friendRequest");
+        }
+
+        if (friendRequest.getStatus() != FriendRequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "FriendRequest was already answered");
+        }
+
+        friendRequest.setStatus(FriendRequestStatus.DECLINED);
+        friendRequestRepository.save(friendRequest);
+    }
 
 
 }
