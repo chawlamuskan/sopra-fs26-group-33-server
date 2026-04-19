@@ -1,5 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,5 +58,20 @@ public class InvitationController {
 		invitationService.declineInvitation(invitationId, token);
 	}	
 
+	@GetMapping("/invitations")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<InvitationGetDTO> getPendingInvitations(@RequestHeader(value = "Authorization", required = false) String token) {
+		userService.validateToken(token);
+
+		List<Invitation> pendingInvitations = invitationService.getPendingInvitations(token);
+
+		List<InvitationGetDTO> invitationGetDTOs = new ArrayList<>();
+
+		for (Invitation invitation : pendingInvitations) {
+            invitationGetDTOs.add(DTOMapper.INSTANCE.convertEntityToInvitationGetDTO(invitation));
+        }
+		return invitationGetDTOs;
+	}
 
 }

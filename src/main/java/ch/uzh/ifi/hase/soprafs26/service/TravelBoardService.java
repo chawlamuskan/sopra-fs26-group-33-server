@@ -6,18 +6,18 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.server.ResponseStatusException;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.PlaceRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 
 @Service
@@ -28,10 +28,12 @@ public class TravelBoardService {
 
 	private final TravelBoardRepository travelBoardRepository;
     private final UserRepository userRepository;
+    private final PlaceRepository placeRepository;
 
-	public TravelBoardService(@Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository, UserRepository userRepository) {
+	public TravelBoardService(@Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository, UserRepository userRepository, PlaceRepository placeRepository) {
 		this.travelBoardRepository = travelBoardRepository;
         this.userRepository = userRepository;
+        this.placeRepository = placeRepository;
 	}
 
 	public List<TravelBoard> getTravelBoards() {
@@ -50,10 +52,15 @@ public class TravelBoardService {
         if (newTravelBoard.getStartDate() != null && newTravelBoard.getEndDate() != null
             && newTravelBoard.getStartDate().isAfter(newTravelBoard.getEndDate())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date cannot be after end date");
-            }
+        }
+        if (newTravelBoard.getInviteCode() == null || newTravelBoard.getInviteCode().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invite code cannot be empty");
+        }
+        if (travelBoardRepository.findByInviteCode(newTravelBoard.getInviteCode().trim().isEmpty()) != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invite code already exists");
+        }
 
         newTravelBoard.setOwner(owner);
-        newTravelBoard.setInviteCode(UUID.randomUUID().toString().substring(0, 8));
         newTravelBoard.setDateCreated(LocalDate.now());
 
 
@@ -94,6 +101,24 @@ public class TravelBoardService {
         }
 
         travelBoardRepository.delete(board);
+    }
+
+    public void leaveTravelBoard(Long boardId, String token) {
+        User user = userRepository.findByToken(token);
+
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+
+        if (board.getOwner().getId().equals(user.getId())) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot leave the board with this action");
+        }
+
+        if (!board.getMembers().contains(user)) {
+          throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User is not a member of this travel board");
+        }
+
+        board.getMembers().remove(user);
+        travelBoardRepository.save(board);
     }
 
     public List<TravelBoard> getTravelBoardsByUser(String token) {
@@ -139,4 +164,25 @@ public class TravelBoardService {
         board.getMembers().add(user);
         travelBoardRepository.save(board);        
     }
+
+    public void addPlaces(Long boardId, String token, Place newPlace) {
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
+
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+
+        if (!board.getOwner().getId().equals(userId) && !(board.getMembers().contains(user))) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Only board members can add places");
+        }
+
+        if (newPlace.getLatitude() == null || newPlace.getLongitude() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Latitude and longitude are required");
+        }
+
+        Place savedPlace = placeRepository.save(newPlace);
+        board.getPlaces().add(savedPlace);
+        travelBoardRepository.save(board);
+
+    }   
 }

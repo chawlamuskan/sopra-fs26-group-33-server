@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPutDTO;
@@ -61,10 +63,17 @@ public class TravelBoardController {
         travelBoardService.deleteTravelBoard(boardId, token);
     }
 
-    @GetMapping("/travelboards/my")
+    @DeleteMapping("/travelboards/{boardId}/membership")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveTravelBoard(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token) {
+        userService.validateToken(token);
+        travelBoardService.leaveTravelBoard(boardId, token);
+      }
+
+    @GetMapping("/travelboards")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token){
+    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token, @RequestParam String user){
         userService.validateToken(token);
         List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByUser(token);
 
@@ -93,5 +102,17 @@ public class TravelBoardController {
         travelBoardService.joinTravelBoardByInviteCode(token, inviteCode);
 
 	}
+
+    @PostMapping("/travelboards/{boardId}/places")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseBody
+    public void addPlaceToBoard(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token, @RequestBody PlacePostDTO placePostDTO) {
+        userService.validateToken(token);
+
+        Place placeInput = DTOMapper.INSTANCE.convertPlacePostDTOtoEntity(placePostDTO);
+
+        travelBoardService.addPlaces(boardId, token, placeInput);
+    }
+
 
 }

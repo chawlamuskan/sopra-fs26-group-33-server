@@ -14,6 +14,9 @@ public class InvitationGetDTO {
 
     private InviteStatus status;
     
+    private String boardName;
+    
+    private String senderUsername;
 			
 
     public Long getId() {
@@ -54,6 +57,22 @@ public class InvitationGetDTO {
 
     public void setStatus(InviteStatus status) {
         this.status = status;
+    }
+
+    public String getBoardName() {
+        return boardName;
+    }
+    
+    public void setBoardName(String boardName) {
+        this.boardName = boardName;
+    }
+    
+    public String getSenderUsername() {
+        return senderUsername;
+    }
+    
+    public void setSenderUsername(String senderUsername) {
+        this.senderUsername = senderUsername;
     }
 
 }

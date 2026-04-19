@@ -1,34 +1,11 @@
-package ch.uzh.ifi.hase.soprafs26.entity;
+package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
-import jakarta.persistence.*;
+public class PlacePostDTO {
 
-import java.io.Serializable;
-		
-
-@Entity
-@Table(name = "places")
-public class Place implements Serializable {
-    @Id
-	@GeneratedValue
-	private Long id;
-    
-    @Column(nullable = false)
     private String name;
-
-    @Column(nullable = false)
+    private String address;
     private Double latitude;
-
-    @Column(nullable = false)
     private Double longitude;
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
@@ -38,6 +15,13 @@ public class Place implements Serializable {
         this.name = name;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
     public Double getLatitude() {
         return latitude;
