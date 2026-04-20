@@ -8,6 +8,9 @@ import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
 import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.FriendRequestGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InvitationGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
@@ -29,6 +32,8 @@ public interface DTOMapper {
 
 	DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
+
+	// ==================== User Mappings ====================
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "username", target = "username")
 	@Mapping(source = "email", target = "email")
@@ -48,6 +53,7 @@ public interface DTOMapper {
 	UserGetDTO convertEntityToUserGetDTO(User user);
 	// Do not expose data like password or token to client 
 
+	// ==================== TravelBoard Mappings ====================
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "startDate", target = "startDate")
 	@Mapping(source = "endDate", target = "endDate")
@@ -65,6 +71,21 @@ public interface DTOMapper {
 	@Mapping(source = "dateCreated", target = "dateCreated")
     TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
 
+	// ==================== Preferences Mappings ====================
+	@Mapping(source = "bio", target = "bio")
+	@Mapping(source = "profilePicture", target = "profilePicture")
+	@Mapping(source = "visitedCountries", target = "visitedCountries")
+	@Mapping(source = "wishlistCountries", target = "wishlistCountries")
+	@Mapping(source = "friends", target = "friends")
+	Preferences convertPreferencesPostDTOtoEntity(PreferencesPostDTO preferencesPostDTO);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "bio", target = "bio")
+	@Mapping(source = "profilePicture", target = "profilePicture")
+	@Mapping(source = "visitedCountries", target = "visitedCountries")
+	@Mapping(source = "wishlistCountries", target = "wishlistCountries")
+	@Mapping(source = "friends", target = "friends")
+	PreferencesGetDTO convertEntityToPreferencesGetDTO(Preferences preferences);
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "board.id", target = "boardId")
