@@ -6,12 +6,15 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.TravelBoardService;
+import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
 
 
@@ -21,47 +24,58 @@ import ch.uzh.ifi.hase.soprafs26.service.TravelBoardService;
 public class TravelBoardController {
 
 	private final TravelBoardService travelBoardService;
+    private final UserService userService;
 
-	TravelBoardController(TravelBoardService travelBoardService) {
+	TravelBoardController(TravelBoardService travelBoardService, UserService userService) {
 		this.travelBoardService = travelBoardService;
+        this.userService = userService;
 	}
 
 
 	@PostMapping("/travelboards")
 	@ResponseStatus(HttpStatus.CREATED)
 	@ResponseBody
-	public TravelBoardGetDTO createTravelBoardGetDTO(@RequestBody TravelBoardPostDTO travelBoardPostDTO, @RequestParam Long ownerId) {
+	public TravelBoardGetDTO createTravelBoard(@RequestBody TravelBoardPostDTO travelBoardPostDTO, @RequestHeader(value = "Authorization", required = false) String token) {
+        userService.validateToken(token);
 
 		TravelBoard travelBoardInput = DTOMapper.INSTANCE.convertTravelBoardPostDTOtoEntity(travelBoardPostDTO);
 
-		TravelBoard createdTravelBoard = travelBoardService.createTravelBoard(travelBoardInput, ownerId);
+		TravelBoard createdTravelBoard = travelBoardService.createTravelBoard(travelBoardInput, token);
 
 		return DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(createdTravelBoard);
 	}
 
 
     @PutMapping("/travelboards/{boardId}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
 	@ResponseBody
-    public TravelBoardGetDTO renameTravelBoard(@PathVariable Long boardId, @RequestParam Long userId, @RequestBody TravelBoardPutDTO travelBoardPutDTO) {
-        TravelBoard updatedBoard = travelBoardService.renameTravelBoard(
-            boardId, userId, travelBoardPutDTO.getName());
-        
-        return DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(updatedBoard);
+    public void renameTravelBoard(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token, @RequestBody TravelBoardPutDTO travelBoardPutDTO) {
+        userService.validateToken(token);
+        travelBoardService.renameTravelBoard(
+            boardId, token, travelBoardPutDTO.getName());
+
     }
 
     @DeleteMapping("/travelboards/{boardId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTravelBoard(@PathVariable Long boardId, @RequestParam Long userId) {
-
-        travelBoardService.deleteTravelBoard(boardId, userId);
+    public void deleteTravelBoard(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token) {
+        userService.validateToken(token);
+        travelBoardService.deleteTravelBoard(boardId, token);
     }
 
-    @GetMapping("/users/{userId}/travelboards")
+    @DeleteMapping("/travelboards/{boardId}/membership")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveTravelBoard(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token) {
+        userService.validateToken(token);
+        travelBoardService.leaveTravelBoard(boardId, token);
+      }
+
+    @GetMapping("/travelboards")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<TravelBoardGetDTO> getTravelBoardsByUser(@PathVariable Long userId){
-        List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByUser(userId);
+    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token, @RequestParam String user){
+        userService.validateToken(token);
+        List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByUser(token);
 
         List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
 
@@ -72,5 +86,33 @@ public class TravelBoardController {
     return travelBoardGetDTOs;
         
     }
+
+    @GetMapping("/travelboards/{boardId}/inviteCode")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public String getInviteCode(@PathVariable Long boardId) {
+        return travelBoardService.getInviteCode(boardId);
+    }
+
+    @PostMapping("/travelboards/join")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public void joinTravelBoardByInviteCode(@RequestHeader(value = "Authorization", required = false) String token, @RequestParam String inviteCode) {
+        userService.validateToken(token);
+        travelBoardService.joinTravelBoardByInviteCode(token, inviteCode);
+
+	}
+
+    @PostMapping("/travelboards/{boardId}/places")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseBody
+    public void addPlaceToBoard(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token, @RequestBody PlacePostDTO placePostDTO) {
+        userService.validateToken(token);
+
+        Place placeInput = DTOMapper.INSTANCE.convertPlacePostDTOtoEntity(placePostDTO);
+
+        travelBoardService.addPlaces(boardId, token, placeInput);
+    }
+
 
 }
