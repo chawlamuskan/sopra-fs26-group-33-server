@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,11 +37,16 @@ public class UserServiceIntegrationTest {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Qualifier("preferencesRepository")
+	@Autowired
+	private PreferencesRepository preferencesRepository;
+
 	@Autowired
 	private UserService userService;
 
 	@BeforeEach
 	public void setup() {
+		preferencesRepository.deleteAll();
 		userRepository.deleteAll();
 	}
 	
