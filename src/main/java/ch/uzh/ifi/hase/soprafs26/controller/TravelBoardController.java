@@ -73,7 +73,7 @@ public class TravelBoardController {
     @GetMapping("/travelboards")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token, @RequestParam String user){
+    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token){
         userService.validateToken(token);
         List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByUser(token);
 

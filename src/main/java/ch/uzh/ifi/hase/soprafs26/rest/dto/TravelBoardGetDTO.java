@@ -9,6 +9,8 @@ public class TravelBoardGetDTO {
     private Long id;
 
     private String name;
+
+    private String location;
     
     private LocalDate startDate;
     
@@ -38,6 +40,14 @@ public class TravelBoardGetDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public LocalDate getStartDate() {
