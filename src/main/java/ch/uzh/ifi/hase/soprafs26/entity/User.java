@@ -2,7 +2,9 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 import jakarta.persistence.*;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import java.io.Serializable;
-import java.time.LocalDate;	
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;	
 
 /**
  * Internal User Representation
@@ -48,6 +50,14 @@ public class User implements Serializable {
 
 	@Column(nullable = false)
 	private LocalDate creationDate;
+
+	@ManyToMany
+	@JoinTable(
+	    name = "user_friends",
+	    joinColumns = @JoinColumn(name = "user_id"),
+	    inverseJoinColumns = @JoinColumn(name = "friend_id")
+	)
+	private List<User> friends = new ArrayList<>();	
 
 	public Long getId() {
 		return id;
@@ -110,6 +120,13 @@ public class User implements Serializable {
 	}
 	public void setCreationDate(LocalDate creationDate) {
 		this.creationDate = creationDate;
+	}
+
+	public List<User> getFriends() {
+		return friends;
+	}
+	public void setFriends(List<User> friends) {
+		this.friends = friends;
 	}
 
 }
