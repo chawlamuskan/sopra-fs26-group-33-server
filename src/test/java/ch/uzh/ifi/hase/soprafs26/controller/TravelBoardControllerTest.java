@@ -5,6 +5,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs26.service.TravelBoardService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPutDTO;
 
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,8 @@ public class TravelBoardControllerTest {
 		TravelBoardPutDTO travelBoardPutDTO = new TravelBoardPutDTO();
 		travelBoardPutDTO.setName("Renamed Board");
 
-        Mockito.doNothing().when(userService).validateToken(token);
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
 		Mockito.doNothing().when(travelBoardService).renameTravelBoard(boardId, token, "Renamed Board");
 		
 		MockHttpServletRequestBuilder putRequest = put("/travelboards/{boardId}", boardId)
@@ -62,7 +64,8 @@ public class TravelBoardControllerTest {
 		Long boardId = 1L;
         String token = "ABC";
 
-        Mockito.doNothing().when(userService).validateToken(token);
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
         Mockito.doNothing().when(travelBoardService).deleteTravelBoard(boardId, token);
 
 		MockHttpServletRequestBuilder deleteRequest = delete("/travelboards/{boardId}", boardId)
@@ -82,7 +85,8 @@ public class TravelBoardControllerTest {
         TravelBoardPutDTO travelBoardPutDTO = new TravelBoardPutDTO();
         travelBoardPutDTO.setName("Hacked Name");
         
-        Mockito.doNothing().when(userService).validateToken(token);
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
         Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - must be owner"))
                 .when(travelBoardService)
                 .renameTravelBoard(boardId, token, "Hacked Name");
@@ -102,7 +106,8 @@ public class TravelBoardControllerTest {
         Long boardId = 1L;
         String token = "ABC";
 
-        Mockito.doNothing().when(userService).validateToken(token);
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
         Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - must be owner"))
                 .when(travelBoardService)
                 .deleteTravelBoard(boardId, token);

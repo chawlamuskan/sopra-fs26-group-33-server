@@ -143,7 +143,7 @@ public class UserService {
     }
 
 	// Validate that the token exists and belongs to a real logged-in user
-	public void validateToken(String token) {
+	public User validateToken(String token) {
 		if (token == null || token.trim().isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided");
 		}
@@ -154,6 +154,7 @@ public class UserService {
 		if (user.getStatus() == UserStatus.OFFLINE) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not logged in");
 		}
+		return user;
 	}
 	
 	// Check uniqueness criteria of the username and email #43

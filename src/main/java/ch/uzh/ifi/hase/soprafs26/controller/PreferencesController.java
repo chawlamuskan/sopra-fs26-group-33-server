@@ -2,8 +2,10 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -38,17 +40,19 @@ public class PreferencesController {
         @RequestHeader(value = "Authorization", required = false) String token,
         @RequestBody PreferencesPostDTO preferencesPostDTO) {
         
-        userService.validateToken(token);
+		// check if the user is logged in and the token belongs to the user whose preferences are being set
+        User loggedInUser = userService.validateToken(token);
+		if (!loggedInUser.getId().equals(userId)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
+				"You are not allowed to set other users' preferences.");
+		}
 
-		Preferences preferences = new Preferences();
-		preferences.setBio(preferencesPostDTO.getBio());
-        preferences.setProfilePicture(preferencesPostDTO.getProfilePicture());
-        preferences.setVisitedCountries(preferencesPostDTO.getVisitedCountries());
-        preferences.setWishlistCountries(preferencesPostDTO.getWishlistCountries());
-		preferences.setFriends(preferencesPostDTO.getFriends());
-
+		// create Preferences entity from DTO
+		Preferences preferences = DTOMapper.INSTANCE.convertPreferencesPostDTOtoEntity(preferencesPostDTO);
+		// save preferences
         Preferences savedPreferences = preferencesService.savePreferences(userId, preferences);
-        return DTOMapper.INSTANCE.convertEntityToPreferencesGetDTO(savedPreferences);
+        
+		return DTOMapper.INSTANCE.convertEntityToPreferencesGetDTO(savedPreferences);
     }
 
     // Get User Preferences
