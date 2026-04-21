@@ -11,7 +11,6 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 
-import org.apache.catalina.connector.Response;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -323,7 +322,6 @@ public class UserControllerTest {
 		user.setEmail("john.doe@example.com");
 		user.setToken("token123");
 		user.setStatus(UserStatus.ONLINE);
-		user.setBio("Hello, I'm John!");
 		user.setCreationDate(java.time.LocalDate.of(2026, 3, 5)); // example creation date
 
 		// Step 2: Mock the userService to return this user when getUserById() is called
@@ -345,7 +343,6 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.username", is(user.getUsername())))
 				.andExpect(jsonPath("$.email", is(user.getEmail())))
 				.andExpect(jsonPath("$.status", is(user.getStatus().toString())))
-				.andExpect(jsonPath("$.bio", is(user.getBio())))
 				.andExpect(jsonPath("$.creationDate", is(user.getCreationDate().toString())));
 	}
 

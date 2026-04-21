@@ -45,9 +45,6 @@ public class User implements Serializable {
 	@Column(nullable = false)
 	private String password;
 
-	@Column
-	private String bio;
-
 	@Column(nullable = false)
 	private LocalDate creationDate;
 
@@ -107,14 +104,7 @@ public class User implements Serializable {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
-	public String getBio() {
-		return bio;
-	}
-	public void setBio(String bio) {
-		this.bio = bio;
-	}
-
+	
 	public LocalDate getCreationDate() {
 		return creationDate;
 	}

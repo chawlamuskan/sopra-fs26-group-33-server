@@ -55,7 +55,6 @@ public class UserServiceIntegrationTest {
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
 		testUser.setPassword("Test1234!");
-		testUser.setBio("This is a test bio");
 
 		// WHEN user is created
 		User createdUser = userService.createUser(testUser);
@@ -78,7 +77,6 @@ public class UserServiceIntegrationTest {
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
 		testUser.setPassword("Test1234!");
-		testUser.setBio("This is a test bio");
 		userService.createUser(testUser);
 
 		// WHEN a second user attempts to register with the same username
@@ -87,7 +85,6 @@ public class UserServiceIntegrationTest {
 		testUser2.setUsername("testUsername");	// duplicate username
 		testUser2.setEmail("other@example.com");
 		testUser2.setPassword("Test1234!");
-		testUser2.setBio("This is another test bio");
 
 		// THEN check that an error is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
@@ -101,7 +98,6 @@ public class UserServiceIntegrationTest {
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
 		testUser.setPassword("Test1234!");
-		testUser.setBio("This is a test bio");
 		userService.createUser(testUser);
 
 		// WHEN a second user attempts to register with the same email
@@ -110,7 +106,6 @@ public class UserServiceIntegrationTest {
 		testUser2.setUsername("testUsername2");
 		testUser2.setEmail("test@example.com");	// duplicate email
 		testUser2.setPassword("Test1234!");
-		testUser2.setBio("This is another test bio");
 
 		// THEN check that an error is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
@@ -125,7 +120,6 @@ public class UserServiceIntegrationTest {
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
 		testUser.setPassword("Test1234!");
-		testUser.setBio("This is a test bio");
 		userService.createUser(testUser);
 
 		// WHEN the user logs in with valid credentials (username and password)
@@ -144,7 +138,6 @@ public class UserServiceIntegrationTest {
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
 		testUser.setPassword("Test1234!");
-		testUser.setBio("This is a test bio");
 		userService.createUser(testUser);
 
 		// WHEN the user logs in with valid credentials (username and password)
@@ -163,7 +156,6 @@ public class UserServiceIntegrationTest {
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
 		testUser.setPassword("Test1234!");
-		testUser.setBio("This is a test bio");
 		userService.createUser(testUser);
 
 		// WHEN the user attempts to log in with invalid credentials
@@ -179,7 +171,6 @@ public class UserServiceIntegrationTest {
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
 		testUser.setPassword("Test1234!");
-		testUser.setBio("This is a test bio");
 		userService.createUser(testUser);
 
 		// WHEN the user logs in with valid credentials
