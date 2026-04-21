@@ -71,6 +71,7 @@ public interface DTOMapper {
 	@Mapping(source = "inviteCode", target = "inviteCode")
 	@Mapping(source = "privacy", target = "privacy")
 	@Mapping(source = "dateCreated", target = "dateCreated")
+	@Mapping(target = "memberIds", ignore = true)
     TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
 
 	// ==================== Preferences Mappings ====================
