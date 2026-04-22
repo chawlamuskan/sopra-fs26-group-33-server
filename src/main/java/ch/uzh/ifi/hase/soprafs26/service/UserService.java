@@ -1,7 +1,5 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,8 +24,6 @@ import java.util.UUID;
 @Transactional
 public class UserService {
 
-	private final Logger log = LoggerFactory.getLogger(UserService.class);
-
 	private final UserRepository userRepository;
 
 	public UserService(@Qualifier("userRepository") UserRepository userRepository) {
@@ -41,13 +37,15 @@ public class UserService {
 	// Register new user
 	public User createUser(User newUser) {
 		checkIfUserExists(newUser);	// check if username or name already exists
+		validateEmail(newUser.getEmail());	// validate email format
 		validatePassword(newUser.getPassword()); // validate password format
+
 		newUser.setToken(UUID.randomUUID().toString()); // set default values
 		newUser.setStatus(UserStatus.ONLINE);
 		newUser.setCreationDate(java.time.LocalDate.now());	// set creation date (added this to User.java)
-		newUser = userRepository.save(newUser);	// save the user with all fields including password and bio
 
-		log.debug("Created Information for User: {}", newUser);
+		newUser = userRepository.save(newUser);	// save the user with all fields including password
+
 		return newUser;
 	}
 
@@ -69,6 +67,21 @@ public class UserService {
 		if (!password.matches(".*[^a-zA-Z0-9].*")) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
 				"Password must contain at least one special character");
+		}
+	}
+
+	// Check valid email format during registration
+	// POST /users 400 BAD REQUEST
+	private void validateEmail(String email) {
+		if (email == null || email.trim().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Email cannot be empty");
+		}
+
+		String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+		if (!email.matches(emailRegex)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Invalid email format. Expected format: example@domain.com");
 		}
 	}
 
@@ -130,7 +143,7 @@ public class UserService {
     }
 
 	// Validate that the token exists and belongs to a real logged-in user
-	public void validateToken(String token) {
+	public User validateToken(String token) {
 		if (token == null || token.trim().isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided");
 		}
@@ -141,6 +154,7 @@ public class UserService {
 		if (user.getStatus() == UserStatus.OFFLINE) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not logged in");
 		}
+		return user;
 	}
 	
 	// Check uniqueness criteria of the username and email #43

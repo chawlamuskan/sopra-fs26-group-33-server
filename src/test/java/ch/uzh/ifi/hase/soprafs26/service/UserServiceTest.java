@@ -33,105 +33,138 @@ public class UserServiceTest {
 	@InjectMocks
 	private UserService userService;
 
-	private User testUser;
+	private User createValidUser() {
+		User user = new User();
+		user.setId(1L);
+		user.setName("testName");
+		user.setUsername("testUsername");
+		user.setEmail("test@example.com");
+		user.setPassword("Test1234!");
+		return user;
+	}
 
 	// sets up a valid user so all tests can start from a clean slate
 	@BeforeEach
 	public void setup() {
 		MockitoAnnotations.openMocks(this);
 
-		// given
-		testUser = new User();
-		testUser.setId(1L);
-		testUser.setName("testName");
-		testUser.setUsername("testUsername");
-		testUser.setEmail("test@example.com");
-		testUser.setPassword("Test1234!"); 	// valid password
-
-		// when a user is saved in the userRepository, return the dummy testUser
-		Mockito.when(userRepository.save(Mockito.any())).thenReturn(testUser);
+		// WHENEVER the userRepository tries to save a user, return the user with an ID (simulate database saving)
+		Mockito.when(userRepository.save(Mockito.any()))
+				.thenAnswer(invocation -> invocation.getArgument(0));
 	}
 
 	// ================ REGISTRATION TESTS ================
 	@Test 	// test that a user can be created successfully with valid input
 	public void createUser_validInputs_success() {
+		// GIVEN a valid user
+		User user = createValidUser();
 
-		// WHENEVER someone searches for a username or email, no duplicate user exists
+		// WHEN someone searches for a username or email, no duplicate user exists
         Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(null); // No user with the same username
 		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(null); // No user with the same email
 
 		// WHEN user is created
-		User createdUser = userService.createUser(testUser);
+		User createdUser = userService.createUser(user);
 
 		// THEN verify user was saved once and all attributes are correct
 		Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any());
-		assertEquals(testUser.getId(), createdUser.getId());
-		assertEquals(testUser.getName(), createdUser.getName());
-		assertEquals(testUser.getUsername(), createdUser.getUsername());
-		assertEquals(testUser.getEmail(), createdUser.getEmail());
+		assertEquals(user.getId(), createdUser.getId());
+		assertEquals(user.getName(), createdUser.getName());
+		assertEquals(user.getUsername(), createdUser.getUsername());
+		assertEquals(user.getEmail(), createdUser.getEmail());
 		assertNotNull(createdUser.getToken());
 		assertEquals(UserStatus.ONLINE, createdUser.getStatus());
 	}
 	
 	@Test  // test that creating a user with a duplicate username throws an error
 	public void createUser_duplicateUsername_throwsException() {
-		// GIVEN a first user that has already been created
+		// GIVEN a valid user
+		User user = createValidUser();
 
 		// WHENEVER someone searches for a username, 
 		// pretend there is already a user with the same username
 		// but no user exists with the same email
-		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(testUser);
+		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(user);
 		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(null);
 
 		// THEN attempt to create another user with same username 
 		// check that an error is thrown
-		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
 	}
 
 	@Test  // test that creating a user with a duplicate email throws an error
 	public void createUser_duplicateEmail_throwsException() {
 		// GIVEN a first user that has already been created
+		User user = createValidUser();
 
 		// WHENEVER someone searches for an email, 
 		// pretend there is already a user with the same email
 		// but no user exists with the same username
-		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
+		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(user);
 		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(null);
 
 		// THEN attempt to create another user with same email
 		// check that an error is thrown
-		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
 	}
 
+	@Test 	// test that creating a user with an invalid email throws an error
+	public void createUser_invalidEmail_throwsException() {
+		// GIVEN a valid user 
+		User user = createValidUser();
+
+		// WHENEVER someone searches for an email or username, no duplicate user exists
+		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(null);
+		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(null);
+
+		// THEN check that an error is thrown 
+		// when trying to create a user with an invalid email (all cases of invalidity)
+		user.setEmail("invalidEmail"); // no @ symbol
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
+	
+		user.setEmail("invalid@Email"); // no domain
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
+	
+		user.setEmail("invalid@.com"); // no domain name
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
+	
+		user.setEmail("@invalid.com"); // no local part
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
+	}
+	
 	@Test  // test that creating a user with an invalid password throws an error
 	public void createUser_invalidPassword_throwsException() {
 		// GIVEN a first user that has already been created
+		User user = createValidUser();
 
-		// WHENEVER someone searches for an email or username, but no duplicate user exists
+		// WHENEVER someone searches for an email or username, no duplicate user exists
 		Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(null);
 		Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(null);
 
 		// THEN check that an error is thrown 
 		// when trying to create a user with an invalid password (all cases of invalidity)
-		testUser.setPassword("Ab1!"); // too short
-		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+		user.setPassword("Ab1!"); // too short
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
 	
-		testUser.setPassword("abcdef1!"); // no uppercase
-		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+		user.setPassword("abcdef1!"); // no uppercase
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
 	
-		testUser.setPassword("Abcdefg!"); // no digit
-		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+		user.setPassword("Abcdefg!"); // no digit
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
 	
-		testUser.setPassword("Abcdef12"); // no special character
-		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+		user.setPassword("Abcdef12"); // no special character
+		assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
 	}
 
 	// ================ LOGIN TESTS ================
 
 	@Test 	// test that a user can log in successfully with valid credentials (by username)
 	public void loginUser_byUsername_success() {
+		// GIVEN a valid user
+		User user = createValidUser();
+		
 		// WHENEVER someone searches for a username, return the testUser
-        Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(testUser);
+        Mockito.when(userRepository.findByUsername(Mockito.any())).thenReturn(user);
 		
 		// WHEN the user logs in with valid credentials (username and password)
 		User loggedInUser = userService.loginUser("testUsername", null, "Test1234!");
@@ -144,8 +177,11 @@ public class UserServiceTest {
 	
 	@Test 	// test that a user can log in successfully with valid credentials (by email)
 	public void loginUser_byEmail_success() {
+		// GIVEN a valid user
+		User user = createValidUser();
+		
 		// WHENEVER someone searches for an email, return the testUser
-        Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(testUser);
+        Mockito.when(userRepository.findByEmail(Mockito.any())).thenReturn(user);
 		
 		// WHEN the user logs in with valid credentials (email and password)
 		User loggedInUser = userService.loginUser(null, "test@example.com", "Test1234!");
@@ -158,8 +194,11 @@ public class UserServiceTest {
 
 	@Test 	// test that logging in with invalid credentials throws an error
 	public void loginUser_invalidCredentials_throwsException() {
+		// GIVEN a valid user
+		User user = createValidUser();
+		
 		// WHENEVER someone searches for a username, return the testUser
-        Mockito.when(userRepository.findByUsername("testUsername")).thenReturn(testUser);
+        Mockito.when(userRepository.findByUsername("testUsername")).thenReturn(user);
 		
 		// WHEN the user attempts to log in with invalid credentials
 		// THEN check that an error is thrown
