@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
 
@@ -9,12 +10,16 @@ public class TravelBoardGetDTO {
     private Long id;
 
     private String name;
+
+    private String location;
     
     private LocalDate startDate;
     
     private LocalDate endDate;
 
     private Long ownerId;
+
+    private List<Long> memberIds;
     
     private String inviteCode;
 
@@ -40,6 +45,14 @@ public class TravelBoardGetDTO {
         this.name = name;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -62,6 +75,14 @@ public class TravelBoardGetDTO {
 
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
+    }
+
+    public List<Long> getMemberIds() {
+        return memberIds;
+    }
+
+    public void setMemberIds(List<Long> memberIds) {
+        this.memberIds = memberIds;
     }
 
     public String getInviteCode() {

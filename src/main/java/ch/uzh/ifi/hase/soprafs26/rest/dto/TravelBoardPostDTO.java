@@ -10,6 +10,8 @@ public class TravelBoardPostDTO {
 
 	private String name;
 
+	private String location;
+
 	private LocalDate startDate;
 
 	private LocalDate endDate;
@@ -25,6 +27,14 @@ public class TravelBoardPostDTO {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
 	}
 
 	public LocalDate getStartDate() {

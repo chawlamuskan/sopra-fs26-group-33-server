@@ -53,6 +53,7 @@ public interface DTOMapper {
 
 	// ==================== TravelBoard Mappings ====================
 	@Mapping(source = "name", target = "name")
+	@Mapping(source = "location", target = "location")
 	@Mapping(source = "startDate", target = "startDate")
 	@Mapping(source = "endDate", target = "endDate")
 	@Mapping(source = "inviteCode", target = "inviteCode")
@@ -61,12 +62,14 @@ public interface DTOMapper {
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "name", target = "name")
+	@Mapping(source = "location", target = "location")
 	@Mapping(source = "startDate", target = "startDate")
 	@Mapping(source = "endDate", target = "endDate")
 	@Mapping(source = "owner.id", target = "ownerId")
 	@Mapping(source = "inviteCode", target = "inviteCode")
 	@Mapping(source = "privacy", target = "privacy")
 	@Mapping(source = "dateCreated", target = "dateCreated")
+	@Mapping(target = "memberIds", ignore = true)
     TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
 
 	// ==================== Preferences Mappings ====================
