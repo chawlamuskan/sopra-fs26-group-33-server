@@ -6,7 +6,13 @@ import java.io.Serializable;
 
 
 @Entity
-@Table(name = "savedPlaces") 
+@Table(
+    name = "savedPlaces",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"externalPlaceId", "user_id"}), // a user can only save a specific place once
+        @UniqueConstraint(columnNames = {"externalPlaceId", "board_id"}) // a place can only be saved once per board
+    }
+)
 
 public class SavedPlace implements Serializable {
 
@@ -28,10 +34,12 @@ public class SavedPlace implements Serializable {
     // @Column(nullable = false) // not sure about this yet, since place is also containing name and lat/lon but we will need it for graying out
     // private String place; 
 
-    @Column(nullable = true)
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
-    @Column(nullable = true)
+    @ManyToOne
+    @JoinColumn(name = "board_id", nullable = true)
     private TravelBoard board;
 
     public Long getId() {
@@ -56,6 +64,14 @@ public class SavedPlace implements Serializable {
     
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public User getuser() {
