@@ -119,4 +119,49 @@ public class TravelboardServiceIntegrationTest {
 
         assertEquals("New Name", updated.getName());
     }
+
+    //#153
+    @Test
+    public void joinTravelBoard_validCode_userAddedToMembers() {
+        // create user
+        User user = new User();
+        user.setName("owner");
+        user.setUsername("owner123");
+        user.setPassword("pw");
+        user.setEmail("owner123@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("token123");
+        user = userRepository.save(user);
+
+        // create user to join
+        User joiner = new User();
+        joiner.setName("joiner");
+        joiner.setUsername("joiner123");
+        joiner.setPassword("pw");
+        joiner.setEmail("joiner123@test.ch");
+        joiner.setCreationDate(LocalDate.now());
+        joiner.setStatus(UserStatus.ONLINE);
+        joiner.setToken("token456");
+        joiner = userRepository.save(joiner);
+
+        // create board
+        TravelBoard board = new TravelBoard();
+        board.setName("Old Name");
+        board.setOwner(user);
+        board.setInviteCode("ABC123");
+        board.setPrivacy(PrivacyLevel.PUBLIC);
+        board.setDateCreated(LocalDate.now());
+
+        board = travelBoardRepository.save(board);
+        Long boardId = board.getId();
+
+        // join add member
+        travelBoardService.joinTravelBoardByInviteCode(joiner.getToken(), "ABC123");
+
+        // assert
+        assertTrue(travelBoardService.getTravelBoardsByUser(joiner.getToken())
+                .stream() // verifies that the board the joiner joined is now included in their travel board list
+                .anyMatch(b -> b.getId().equals(boardId))); // true if any board in that list has the expected ID
+    }
 }
