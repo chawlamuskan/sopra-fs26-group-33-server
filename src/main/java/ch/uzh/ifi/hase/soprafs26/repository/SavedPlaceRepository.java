@@ -11,7 +11,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
 
 
 @Repository("savedPlaceRepository")
-public interface SavedPlaceRespository extends JpaRepository<SavedPlace, Long> {
+public interface SavedPlaceRepository extends JpaRepository<SavedPlace, Long> {
     List<SavedPlace> findAllByUser (User user);
     List<SavedPlace> findAllByBoard (TravelBoard board);
     SavedPlace findByNameAndAddressAndUser(String name, String address, User user);
