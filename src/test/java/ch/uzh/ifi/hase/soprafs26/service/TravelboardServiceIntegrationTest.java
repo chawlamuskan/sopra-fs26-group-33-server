@@ -10,6 +10,7 @@ import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
@@ -35,11 +36,16 @@ public class TravelboardServiceIntegrationTest {
 	@Autowired
 	private TravelBoardRepository travelBoardRepository;
 
+    @Qualifier("invitationRepository")
+    @Autowired
+    private InvitationRepository invitationRepository;
+
 	@Autowired
 	private TravelBoardService travelBoardService;
 
 	@BeforeEach
 	public void setup() {
+        invitationRepository.deleteAll();
 		travelBoardRepository.deleteAll();
         userRepository.deleteAll();
 	}
@@ -163,5 +169,66 @@ public class TravelboardServiceIntegrationTest {
         assertTrue(travelBoardService.getTravelBoardsByUser(joiner.getToken())
                 .stream() // verifies that the board the joiner joined is now included in their travel board list
                 .anyMatch(b -> b.getId().equals(boardId))); // true if any board in that list has the expected ID
+    }
+
+    //#265
+    @Test
+    public void leaveTravelBoard_validMember_removesOnlyThatUsersMembership() {
+        // create user: owner
+        User owner = new User();
+        owner.setName("owner");
+        owner.setUsername("owner123");
+        owner.setPassword("pw");
+        owner.setEmail("owner123@test.ch");
+        owner.setCreationDate(LocalDate.now());
+        owner.setStatus(UserStatus.ONLINE);
+        owner.setToken("ownertoken");
+        owner = userRepository.save(owner);
+
+        // create user: member1
+        User member1 = new User();
+        member1.setName("member1");
+        member1.setUsername("member123");
+        member1.setPassword("pw");
+        member1.setEmail("member123@test.ch");
+        member1.setCreationDate(LocalDate.now());
+        member1.setStatus(UserStatus.ONLINE);
+        member1.setToken("member-token-1");
+        member1 = userRepository.save(member1);
+
+        // create user: member2
+        User member2 = new User();
+        member2.setName("member2");
+        member2.setUsername("member456");
+        member2.setPassword("pw");
+        member2.setEmail("member456@test.ch");
+        member2.setCreationDate(LocalDate.now());
+        member2.setStatus(UserStatus.ONLINE);
+        member2.setToken("member-token-2");
+        member2 = userRepository.save(member2);
+
+        // create board
+        TravelBoard board = new TravelBoard();
+        board.setName("Group Trip");
+        board.setOwner(owner);
+        board.setInviteCode("LEAVE123");
+        board.setPrivacy(PrivacyLevel.PUBLIC);
+        board.setDateCreated(LocalDate.now());
+        board.getMembers().add(member1);
+        board.getMembers().add(member2);
+        board = travelBoardRepository.save(board);
+        Long boardId = board.getId();
+
+        // member1 leave board
+        travelBoardService.leaveTravelBoard(board.getId(), member1.getToken());
+
+        // assert
+        assertTrue(travelBoardRepository.findById(boardId).isPresent());
+        assertFalse(travelBoardRepository.findByMembersId(member1.getId())
+                .stream()
+                .anyMatch(b -> b.getId().equals(boardId)));
+        assertTrue(travelBoardRepository.findByMembersId(member2.getId())
+                .stream()
+                .anyMatch(b -> b.getId().equals(boardId)));
     }
 }
