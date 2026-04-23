@@ -37,8 +37,7 @@ public interface DTOMapper {
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "username", target = "username")
 	@Mapping(source = "email", target = "email")
-	@Mapping(source = "password", target = "password")  		 
-	@Mapping(source = "bio", target = "bio")					
+	@Mapping(source = "password", target = "password")					
 	// No creationDate, token or status, they will be set in the Service when creating user
 	User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
@@ -48,13 +47,13 @@ public interface DTOMapper {
 	@Mapping(source = "email", target = "email")
 	@Mapping(source = "token", target = "token")
 	@Mapping(source = "status", target = "status")
-	@Mapping(source = "bio", target = "bio")
 	@Mapping(source = "creationDate", target = "creationDate")
 	UserGetDTO convertEntityToUserGetDTO(User user);
 	// Do not expose data like password or token to client 
 
 	// ==================== TravelBoard Mappings ====================
 	@Mapping(source = "name", target = "name")
+	@Mapping(source = "location", target = "location")
 	@Mapping(source = "startDate", target = "startDate")
 	@Mapping(source = "endDate", target = "endDate")
 	@Mapping(source = "inviteCode", target = "inviteCode")
@@ -63,12 +62,14 @@ public interface DTOMapper {
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "name", target = "name")
+	@Mapping(source = "location", target = "location")
 	@Mapping(source = "startDate", target = "startDate")
 	@Mapping(source = "endDate", target = "endDate")
 	@Mapping(source = "owner.id", target = "ownerId")
 	@Mapping(source = "inviteCode", target = "inviteCode")
 	@Mapping(source = "privacy", target = "privacy")
 	@Mapping(source = "dateCreated", target = "dateCreated")
+	@Mapping(target = "memberIds", ignore = true)
     TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
 
 	// ==================== Preferences Mappings ====================
@@ -87,6 +88,7 @@ public interface DTOMapper {
 	@Mapping(source = "friends", target = "friends")
 	PreferencesGetDTO convertEntityToPreferencesGetDTO(Preferences preferences);
 
+	// ==================== Invitation Mappings ====================
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "board.id", target = "boardId")
 	@Mapping(source = "sender.id", target = "senderId")
@@ -96,11 +98,13 @@ public interface DTOMapper {
 	@Mapping(source = "sender.username", target = "senderUsername")
     InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
 
+	// ==================== Places Mappings ====================
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "latitude", target = "latitude")
 	@Mapping(source = "longitude", target = "longitude")
     Place convertPlacePostDTOtoEntity(PlacePostDTO placePostDTO);
 
+	// ==================== Friend Request Mappings ====================
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "sender.id", target = "senderId")
 	@Mapping(source = "receiver.id", target = "receiverId")

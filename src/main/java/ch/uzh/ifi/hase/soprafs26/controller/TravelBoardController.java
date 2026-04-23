@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -73,14 +74,18 @@ public class TravelBoardController {
     @GetMapping("/travelboards")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token, @RequestParam String user){
+    public List<TravelBoardGetDTO> getTravelBoardsByUser(@RequestHeader(value = "Authorization", required = false) String token){
         userService.validateToken(token);
         List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsByUser(token);
 
         List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
 
         for (TravelBoard travelBoard : travelBoards) {
-            travelBoardGetDTOs.add(DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(travelBoard));
+            TravelBoardGetDTO dto = DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(travelBoard);
+            dto.setMemberIds(
+                travelBoard.getMembers().stream().map(user -> user.getId()).collect(Collectors.toList())
+            );
+            travelBoardGetDTOs.add(dto);
         }
 
     return travelBoardGetDTOs;

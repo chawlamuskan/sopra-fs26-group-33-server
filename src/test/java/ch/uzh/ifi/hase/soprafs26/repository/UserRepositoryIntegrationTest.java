@@ -29,7 +29,6 @@ public class UserRepositoryIntegrationTest {
 		user.setEmail("test@example.com");
 		user.setStatus(UserStatus.OFFLINE);
 		user.setToken("1");
-		user.setBio( "This is a bio");
 		user.setCreationDate(java.time.LocalDate.now());
 		user.setPassword("Password123!");
 

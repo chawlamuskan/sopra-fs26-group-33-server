@@ -11,7 +11,6 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 
-import org.apache.catalina.connector.Response;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,30 +53,33 @@ public class UserControllerTest {
 	@MockitoBean
 	private UserService userService;
 
-	// ================ GET /users TESTS ================
-	@Test
-	public void givenUsers_whenGetUsers_thenReturnJsonArray() throws Exception {
-		// given
+	private User createValidUser() {
 		User user = new User();
-		user.setName("Firstname Lastname");
-		user.setUsername("firstname@lastname");
+		user.setId(1L);
+		user.setName("testName");
+		user.setUsername("testUsername");
 		user.setEmail("test@example.com");
-		user.setStatus(UserStatus.OFFLINE);
+		user.setStatus(UserStatus.ONLINE);
+		user.setToken("valid-token");
+		user.setCreationDate(java.time.LocalDate.now());
+		return user;
+	}
 
+	// ================ GET /users TESTS ================
+	@Test	// test that the list of users is fetched correctly
+	public void givenUsers_whenGetUsers_thenReturnJsonArray() throws Exception {
+		// GIVEN a list of users 
+		User user = createValidUser();
 		List<User> allUsers = Collections.singletonList(user);
-
-		// this mocks the UserService -> we define above what the userService should
-		// return when getUsers() is called
+		given(userService.validateToken(Mockito.any())).willReturn(user);
 		given(userService.getUsers()).willReturn(allUsers);
-		
-		Mockito.doNothing().when(userService).validateToken(Mockito.any());
 
-
-		// when
-		MockHttpServletRequestBuilder getRequest = get("/users").contentType(MediaType.APPLICATION_JSON);
-
-		// then
-		mockMvc.perform(getRequest).andExpect(status().isOk())
+		// WHEN performing GET request to /users 
+		MockHttpServletRequestBuilder getRequest = get("/users")
+			.contentType(MediaType.APPLICATION_JSON);
+		// THEN return 200 OK with the list of users in the response body
+		mockMvc.perform(getRequest)
+				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", hasSize(1)))
 				.andExpect(jsonPath("$[0].name", is(user.getName())))
 				.andExpect(jsonPath("$[0].username", is(user.getUsername())))
@@ -88,8 +90,8 @@ public class UserControllerTest {
 	@Test 	// test that restricted pages are inaccessible without token
 	public void getUsers_noToken_returnsUnauthorized() throws Exception {
 		// GIVEN no token provided in the request header
-		Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided"))
-				.when(userService).validateToken(Mockito.isNull());
+		Mockito.when(userService.validateToken(Mockito.isNull()))
+				.thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided"));
 
 		// WHEN performing GET request to /users without Authorization header
 		MockHttpServletRequestBuilder getRequest = get("/users")
@@ -103,8 +105,8 @@ public class UserControllerTest {
 	@Test 	// test that restricted pages are inaccessible with invalid token
 	public void getUsers_invalidToken_returnsUnauthorized() throws Exception {
 		// GIVEN invalid token provided in the request header
-		Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token"))
-				.when(userService).validateToken(Mockito.eq("invalid-token"));
+		Mockito.when(userService.validateToken(Mockito.anyString()))
+				.thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token"));
 		
 		// WHEN performing GET request to /users with invalid token in Authorization header
 		MockHttpServletRequestBuilder getRequest = get("/users")
@@ -119,29 +121,23 @@ public class UserControllerTest {
 	// ================ POST /users TESTS ================
 	@Test
 	public void createUser_validInput_userCreated() throws Exception {
-		// given
-		User user = new User();
-		user.setId(1L);
-		user.setName("Test User");
-		user.setUsername("testUsername");
-		user.setEmail("test@example.com");
-		user.setToken("1");
-		user.setStatus(UserStatus.ONLINE);
+		// GIVEN a valid user
+		User user = createValidUser();
 
-		UserPostDTO userPostDTO = new UserPostDTO();
-		userPostDTO.setName("Test User");
-		userPostDTO.setUsername("testUsername");
-		userPostDTO.setEmail("test@example.com");
-		userPostDTO.setPassword("Test1234!");
+		UserPostDTO dto = new UserPostDTO();
+		dto.setName("Test User");
+		dto.setUsername("testUsername");
+		dto.setEmail("test@example.com");
+		dto.setPassword("Test1234!");
 
 		given(userService.createUser(Mockito.any())).willReturn(user);
 
-		// when/then -> do the request + validate the result
+		// WHEN POST request is made to /users with the user details in the request body
 		MockHttpServletRequestBuilder postRequest = post("/users")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(asJsonString(userPostDTO));
+				.content(asJsonString(dto));
 
-		// then
+		// THEN return 201 CREATED with the created user in the response body
 		mockMvc.perform(postRequest)
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id", is(user.getId().intValue())))
@@ -153,60 +149,66 @@ public class UserControllerTest {
 
 	@Test
 	public void createUser_duplicateUsername_conflict() throws Exception {
-		
-		UserPostDTO duplicateUserDTO = new UserPostDTO();
-		duplicateUserDTO.setName("Another User");
-		duplicateUserDTO.setUsername("duplicateUsername"); // duplicate username
-		duplicateUserDTO.setEmail("email@example.com");
-		duplicateUserDTO.setPassword("Test1234!");
+		// GIVEN a user with a username that already exists in the database
+		UserPostDTO dto = new UserPostDTO();
+		dto.setName("Another User");
+		dto.setUsername("duplicateUsername"); // duplicate username
+		dto.setEmail("email@example.com");
+		dto.setPassword("Test1234!");
 
 		given(userService.createUser(Mockito.any()))
 			.willThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists"));
 
+		// WHEN POST request is made to /users with the duplicate username in the request body
 		MockHttpServletRequestBuilder postRequest = post("/users")
 				.contentType(MediaType.APPLICATION_JSON) 
-				.content(asJsonString(duplicateUserDTO)); 
+				.content(asJsonString(dto)); 
 
+		// THEN return 409 CONFLICT
 		mockMvc.perform(postRequest)
 				.andExpect(status().isConflict()); // HTTP 409
 	}
 
 	@Test
 	public void createUser_duplicateEmail_conflict() throws Exception {
-		
-		UserPostDTO duplicateUserDTO = new UserPostDTO();
-		duplicateUserDTO.setName("Another User");
-		duplicateUserDTO.setUsername("anotherUsername"); 
-		duplicateUserDTO.setEmail("duplicate@example.com"); // duplicate email
-		duplicateUserDTO.setPassword("Test1234!");
+		// GIVEN a user with an email that already exists in the database
+		UserPostDTO dto = new UserPostDTO();
+		dto.setName("Another User");
+		dto.setUsername("anotherUsername"); 
+		dto.setEmail("duplicate@example.com"); // duplicate email
+		dto.setPassword("Test1234!");
 
 		given(userService.createUser(Mockito.any()))
 			.willThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists"));
-
+		
+		// WHEN POST request is made to /users with the duplicate email in the request body
 		MockHttpServletRequestBuilder postRequest = post("/users")
 				.contentType(MediaType.APPLICATION_JSON) 
-				.content(asJsonString(duplicateUserDTO)); 
-
+				.content(asJsonString(dto)); 
+		
+		// THEN return 409 CONFLICT
 		mockMvc.perform(postRequest)
 				.andExpect(status().isConflict()); // HTTP 409
 	}
 
 	@Test
 	public void createUser_invalidPassword_badRequest() throws Exception {
-		
-		UserPostDTO invalidPasswordDTO = new UserPostDTO();
-		invalidPasswordDTO.setName("Test User");
-		invalidPasswordDTO.setUsername("testUsername"); 
-		invalidPasswordDTO.setEmail("test@example.com");
-		invalidPasswordDTO.setPassword("weak");
+		// GIVEN a user with a password that does not meet the required format
+		UserPostDTO dto = new UserPostDTO();
+		dto.setName("Test User");
+		dto.setUsername("testUsername"); 
+		dto.setEmail("test@example.com");
+		dto.setPassword("weak");
 
 		given(userService.createUser(Mockito.any()))
 			.willThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password format."));
 
+		// WHEN POST request is made to /users with the invalid password in the request body
 		MockHttpServletRequestBuilder postRequest = post("/users")
 				.contentType(MediaType.APPLICATION_JSON) 
-				.content(asJsonString(invalidPasswordDTO)); 
-
+				.content(asJsonString(dto)); 
+		
+		// THEN return 400 BAD REQUEST
 		mockMvc.perform(postRequest)
 				.andExpect(status().isBadRequest()); // HTTP 400
 	}
@@ -215,49 +217,49 @@ public class UserControllerTest {
 	// ================ POST /login TESTS ================
 	@Test
 	public void loginUser_validCredentials_returnsOk() throws Exception {
-		UserLoginDTO loginDTO = new UserLoginDTO();
-		loginDTO.setUsername("testUsername");
-		loginDTO.setPassword("Test1234!");
-
-		User loggedInUser = new User();
-		loggedInUser.setId(1L);
-		loggedInUser.setName("Test User");
-		loggedInUser.setUsername("testUsername");
-		loggedInUser.setEmail("test@example.com");
-		loggedInUser.setToken("testToken");
-		loggedInUser.setStatus(UserStatus.ONLINE);
+		// GIVEN valid login credentials
+		User user = createValidUser();
+		
+		UserLoginDTO dto = new UserLoginDTO();
+		dto.setUsername("testUsername");
+		dto.setPassword("Test1234!");
 
 		given(userService.loginUser(Mockito.any(), Mockito.any(), Mockito.any()))
-			.willReturn(loggedInUser);
+			.willReturn(user);
 		
+		// WHEN POST request is made to /login with the valid credentials in the request body
 		MockHttpServletRequestBuilder postRequest = post("/login")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(asJsonString(loginDTO));
+				.content(asJsonString(dto));
 
+		// THEN return 200 OK with the logged-in user in the response body
 		mockMvc.perform(postRequest)
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id", is(loggedInUser.getId().intValue())))
-				.andExpect(jsonPath("$.name", is(loggedInUser.getName())))
-				.andExpect(jsonPath("$.username", is(loggedInUser.getUsername())))
-				.andExpect(jsonPath("$.email", is(loggedInUser.getEmail())))
+				.andExpect(jsonPath("$.id", is(user.getId().intValue())))
+				.andExpect(jsonPath("$.name", is(user.getName())))
+				.andExpect(jsonPath("$.username", is(user.getUsername())))
+				.andExpect(jsonPath("$.email", is(user.getEmail())))
 				.andExpect(jsonPath("$.password").doesNotExist()) // password should not be returned in the response
-				.andExpect(jsonPath("$.status", is(loggedInUser.getStatus().toString())))
-				.andExpect(jsonPath("$.token", is(loggedInUser.getToken())));
+				.andExpect(jsonPath("$.status", is(user.getStatus().toString())))
+				.andExpect(jsonPath("$.token", is(user.getToken())));
 	}
 
 	@Test
 	public void loginUser_invalidCredentials_returnsUnauthorized() throws Exception {
-		UserLoginDTO loginDTO = new UserLoginDTO();
-		loginDTO.setUsername("testUsername"); 
-		loginDTO.setPassword("WrongPass1!");
+		// GIVEN invalid login credentials
+		UserLoginDTO dto = new UserLoginDTO();
+		dto.setUsername("testUsername"); 
+		dto.setPassword("WrongPass1!");
 
 		given(userService.loginUser(Mockito.any(), Mockito.any(), Mockito.any()))
 			.willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 		
+		// WHEN POST request is made to /login with the invalid credentials in the request body
 		MockHttpServletRequestBuilder postRequest = post("/login")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(asJsonString(loginDTO));
+				.content(asJsonString(dto));
 
+		// THEN return 401 UNAUTHORIZED
 		mockMvc.perform(postRequest)
 				.andExpect(status().isUnauthorized());
 	}
@@ -266,7 +268,9 @@ public class UserControllerTest {
 	@Test	// test that a user can log out successfully with a valid token
 	public void logoutUser_validToken_returnsNoContent() throws Exception {
 		// GIVEN a valid token for an online user
-		Mockito.doNothing().when(userService).validateToken(Mockito.eq("valid-token"));
+		User user = createValidUser();
+		given(userService.validateToken("valid-token"))
+			.willReturn(user);
 		Mockito.doNothing().when(userService).logoutByToken(Mockito.eq("valid-token"));
 		
 		// WHEN POST /users/logout is called with the valid token in the Authorization header
@@ -315,29 +319,17 @@ public class UserControllerTest {
 	// ================ GET /users/{id} TESTS ================
 	@Test
 	public void getUser_validId_returnsUser() throws Exception {
-		// Step 1: Create a dummy user to be returned by the service
-		User user = new User();
-		user.setId(1L);
-		user.setName("John Doe");
-		user.setUsername("john_doe");
-		user.setEmail("john.doe@example.com");
-		user.setToken("token123");
-		user.setStatus(UserStatus.ONLINE);
-		user.setBio("Hello, I'm John!");
-		user.setCreationDate(java.time.LocalDate.of(2026, 3, 5)); // example creation date
+		// GIVEN a valid user ID
+		User user = createValidUser();
 
-		// Step 2: Mock the userService to return this user when getUserById() is called
+		given(userService.validateToken(Mockito.any())).willReturn(user);
 		given(userService.getUserById(user.getId())).willReturn(user);
-		//given(userService.getUserByToken(user.getToken())).willReturn(user); // mock token validation for authorization
 
-		Mockito.doNothing().when(userService).validateToken(Mockito.any());
-
-		// Step 3: Perform GET request to /users/{id}
+		// WHEN performing GET request to /users/{id} with the valid user ID
 		MockHttpServletRequestBuilder getRequest = get("/users/{id}", user.getId())
 				.contentType(MediaType.APPLICATION_JSON);
-				//.header("Authorization", user.getToken()); // include token in header for authorization
-
-		// Step 4: Validate the response
+		
+		// THEN return 200 OK with the user details in the response body
 		mockMvc.perform(getRequest)
 				.andExpect(status().isOk()) // HTTP 200
 				.andExpect(jsonPath("$.id", is(user.getId().intValue())))
@@ -345,26 +337,23 @@ public class UserControllerTest {
 				.andExpect(jsonPath("$.username", is(user.getUsername())))
 				.andExpect(jsonPath("$.email", is(user.getEmail())))
 				.andExpect(jsonPath("$.status", is(user.getStatus().toString())))
-				.andExpect(jsonPath("$.bio", is(user.getBio())))
 				.andExpect(jsonPath("$.creationDate", is(user.getCreationDate().toString())));
 	}
 
 	@Test
 	public void getUser_invalidId_returnsNotFound() throws Exception {
-		// Step 1: Use an ID that does not exist
-		Long nonExistentId = 999L;
+		// GIVEN 
+		User user = createValidUser();
 
-		// Step 2: Mock the userService to throw ResponseStatusException with 404
-		given(userService.getUserById(nonExistentId))
+		given(userService.validateToken(Mockito.any())).willReturn(user);
+		given(userService.getUserById(999L))
 				.willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 		        
-		Mockito.doNothing().when(userService).validateToken(Mockito.any());
-
-		// Step 3: Perform GET request to /users/{id}
-		MockHttpServletRequestBuilder getRequest = get("/users/{id}", nonExistentId)
+		// WHEN performing GET request to /users/{id} with a non-existent user ID
+		MockHttpServletRequestBuilder getRequest = get("/users/{id}", 999L)
 				.contentType(MediaType.APPLICATION_JSON);
 
-		// Step 4: Validate that the response status is 404 NOT FOUND
+		// THEN validate that the response status is 404 NOT FOUND
 		mockMvc.perform(getRequest)
 				.andExpect(status().isNotFound());
 	}
@@ -372,49 +361,39 @@ public class UserControllerTest {
 	// ================ PUT /users/{id} TESTS ================
 	@Test
 	public void updateUser_validInput_noContent() throws Exception {
-		// Create a dummy user to be updated
-		User user = new User();
-		user.setId(1L);
-		user.setName("Test User");
-		user.setUsername("testUsername");
-		user.setEmail("test@example.com");
-		user.setToken("token123");
-		user.setStatus(UserStatus.ONLINE);
+		// GIVEN a valid user ID and new password
+		User user = createValidUser();
 
-		UserPutDTO userPutDTO = new UserPutDTO();
-		userPutDTO.setPassword("Test1234!");
+		UserPutDTO dto = new UserPutDTO();
+		dto.setPassword("Test1234!");
 
 		given(userService.getUserById(user.getId())).willReturn(user);
-		Mockito.doNothing().when(userService).updatePassword(Mockito.eq(user.getId()), Mockito.any());
+		Mockito.doNothing().when(userService).updatePassword(user.getId(), dto.getPassword());
 
-		// Create PUT request
+		// WHEN performing PUT request to /users/{id} with the new password in the request body
 		MockHttpServletRequestBuilder putRequest = put("/users/{id}", user.getId())
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(asJsonString(userPutDTO));
+				.content(asJsonString(dto));
 
-		// Perform request and expect 204 No Content
+		// THEN return 204 NO CONTENT
 		mockMvc.perform(putRequest)
 			.andExpect(status().isNoContent());
 	}
 
 	@Test
 	public void updateUser_userNotFound_notFound() throws Exception {
-		// Given a non-existent user ID
-		Long nonExistentUserId = 999L;
+		// GIVEN a valid user ID and new password
+		UserPutDTO dto = new UserPutDTO();
+		dto.setPassword("newSecurePassword");
+		
+		given(userService.getUserById(999L)).willReturn(null);
 
-		// Mock the service to return null (user not found)
-		given(userService.getUserById(nonExistentUserId)).willReturn(null);
-
-		// Create the UserPutDTO with new password
-		UserPutDTO userPutDTO = new UserPutDTO();
-		userPutDTO.setPassword("newSecurePassword");
-
-		// Perform PUT request with non-existent user ID
-		MockHttpServletRequestBuilder putRequest = put("/users/{id}", nonExistentUserId)
+		// WHEN performing PUT request to /users/{id} with a non-existent user ID
+		MockHttpServletRequestBuilder putRequest = put("/users/{id}", 999L)
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(asJsonString(userPutDTO));
+				.content(asJsonString(dto));
 
-		// Expect 404 Not Found since the user doesn't exist
+		// THEN return 404 NOT FOUND
 		mockMvc.perform(putRequest)
 				.andExpect(status().isNotFound()); // 404 Not Found
 	}

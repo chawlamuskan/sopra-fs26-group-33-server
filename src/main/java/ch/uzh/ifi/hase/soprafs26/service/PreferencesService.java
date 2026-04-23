@@ -44,23 +44,13 @@ public class PreferencesService {
             return preferencesRepository.save(newPreferences);
         }
 
-        if (newPreferences.getBio() != null) {
-            existing.setBio(newPreferences.getBio());
-        }
-        if (newPreferences.getProfilePicture() != null) {
-            existing.setProfilePicture(newPreferences.getProfilePicture());
-        }
-        if (newPreferences.getVisitedCountries() != null) {
-            existing.setVisitedCountries(newPreferences.getVisitedCountries());
-        }
-        if (newPreferences.getWishlistCountries() != null) {
-            existing.setWishlistCountries(newPreferences.getWishlistCountries());
-        }
-        if (newPreferences.getFriends() != null) {
-            existing.setFriends(newPreferences.getFriends());
-        }
+        if (newPreferences.getBio() != null) { existing.setBio(newPreferences.getBio());}
+        if (newPreferences.getProfilePicture() != null) { existing.setProfilePicture(newPreferences.getProfilePicture()); }
+        if (newPreferences.getVisitedCountries() != null) { existing.setVisitedCountries(newPreferences.getVisitedCountries()); }
+        if (newPreferences.getWishlistCountries() != null) { existing.setWishlistCountries(newPreferences.getWishlistCountries());}
+        if (newPreferences.getFriends() != null) { existing.setFriends(newPreferences.getFriends());}
+        
         return preferencesRepository.save(existing);
-
     }
 	
 	// retrieve User Preferences by userId
