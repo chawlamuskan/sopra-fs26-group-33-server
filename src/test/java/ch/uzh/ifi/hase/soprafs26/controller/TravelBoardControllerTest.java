@@ -127,7 +127,8 @@ public class TravelBoardControllerTest {
         String token = "ABC";
         String inviteCode = "VALID123";
 
-        Mockito.doNothing().when(userService).validateToken(token);
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
         Mockito.doNothing().when(travelBoardService).joinTravelBoardByInviteCode(token, inviteCode);
 
         MockHttpServletRequestBuilder postRequest = post("/travelboards/join")
@@ -145,7 +146,8 @@ public class TravelBoardControllerTest {
         String token = "ABC";
         String inviteCode = "INVALID123";
 
-        Mockito.doNothing().when(userService).validateToken(token);
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
         Mockito.doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Invite code is invalid"))
                 .when(travelBoardService)
                 .joinTravelBoardByInviteCode(token, inviteCode);
@@ -164,9 +166,8 @@ public class TravelBoardControllerTest {
     public void joinTravelBoard_missingToken_unauthorized() throws Exception {
         String inviteCode = "BOARD123";
 
-        Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"))
-                .when(userService)
-                .validateToken(null);
+        Mockito.when(userService.validateToken((String) Mockito.isNull()))
+                .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
         MockHttpServletRequestBuilder postRequest = post("/travelboards/join")
                 .param("inviteCode", inviteCode)

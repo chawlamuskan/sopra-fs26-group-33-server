@@ -56,7 +56,8 @@ public class InvitationControllerTest {
         invitation.setReceiver(receiver);
         invitation.setBoard(board);
     
-        Mockito.doNothing().when(userService).validateToken(token);
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
     
         Mockito.when(invitationService.getPendingInvitations(token)).thenReturn(List.of(invitation));
     
@@ -77,7 +78,8 @@ public class InvitationControllerTest {
         InvitationPostDTO invitationPostDTO = new InvitationPostDTO();
         invitationPostDTO.setReceiverId(2L);
 
-        Mockito.doNothing().when(userService).validateToken(token);
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
 
         Mockito.doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "A pending invitation for this user and travel board already exists"))
                 .when(invitationService)
