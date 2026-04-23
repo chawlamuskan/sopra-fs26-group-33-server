@@ -7,10 +7,14 @@ import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
 import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
 import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
+import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
+import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlaceGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.FriendRequestGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InvitationGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
@@ -111,5 +115,49 @@ public interface DTOMapper {
 	@Mapping(source = "status", target = "status")
 	@Mapping(source = "sender.username", target = "senderUsername")
     FriendRequestGetDTO convertEntityToFriendRequestGetDTO(FriendRequest createdFriendRequest);
+
+	// ==================== Saved Places Mappings ====================
+	@Mapping(source = "externalPlaceId", target = "externalPlaceId")
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "address", target = "address")
+	@Mapping(source = "rating", target = "rating")
+	@Mapping(source = "photoReference", target = "photoReference")
+	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "types", target = "types")
+	SavedPlace convertSavedPlacePostDTOToEntity(SavedPlacePostDTO savedPlacePostDTO);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "externalPlaceId", target = "externalPlaceId")
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "address", target = "address")
+	@Mapping(source = "rating", target = "rating")
+	@Mapping(source = "photoReference", target = "photoReference")
+	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "types", target = "types")
+	SavedPlaceGetDTO convertEntityToSavedPlaceGetDTO(SavedPlace savedPlace);
+
+	// ==================== Travel Board Places Mappings ====================
+	@Mapping(source = "externalPlaceId", target = "externalPlaceId")
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "address", target = "address")
+	@Mapping(source = "rating", target = "rating")
+	@Mapping(source = "photoReference", target = "photoReference")
+	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "types", target = "types")
+	TravelBoardPlace convertTravelBoardPlacePostDTOToEntity(TravelBoardPostDTO travelBoardPostDTO);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "externalPlaceId", target = "externalPlaceId")
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "address", target = "address")
+	@Mapping(source = "rating", target = "rating")
+	@Mapping(source = "photoReference", target = "photoReference")
+	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "types", target = "types")
+	TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoardPlace travelBoardPlace);
 
 }
