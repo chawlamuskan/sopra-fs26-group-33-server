@@ -6,6 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
@@ -65,5 +70,35 @@ public class PreferencesService {
         return preferences;
     }
 	
+    // retrieve Saved Countries (UNION of visited & wishlist Countries)
+    public List<Map<String, String>> getSavedCountries(Long userId) {
+
+        Preferences preferences = getPreferences(userId);
+        List<Map<String, String>> result = new ArrayList<>();
+        
+        // Visited
+        if (preferences.getVisitedCountries() != null) {
+            for (String country : preferences.getVisitedCountries()) {
+                Map<String, String> entry = new HashMap<>();
+                entry.put("countryName", country);
+                entry.put("status","visited");
+                result.add(entry);
+            }
+        }
+        // Wishlist
+        if(preferences.getWishlistCountries() != null) {
+            for (String country : preferences.getWishlistCountries()) {
+                boolean alreadyExists = result.stream()
+                    .anyMatch(c -> c.get("countryName").equals(country));
+                if (!alreadyExists) {
+                    Map<String, String> entry = new HashMap<>();
+                    entry.put("countryName", country);
+                    entry.put("status","wishlist");
+                    result.add(entry);
+                }  
+            }
+        }
+        return result;
+    }
 
 }
