@@ -165,13 +165,13 @@ public class UserService {
 
 		if (userByUsername != null && userByEmail != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
-				"Registration failed: username & email already exist");
+				"Registration failed: Username & email already exist");
 		} else if (userByUsername != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
-				"Registration failed: username already exists");
+				"Registration failed: Username already exists");
 		} else if (userByEmail != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, 
-				"Registration failed: email already exists");
+				"Registration failed: Email already exists");
 		}
 	}
 

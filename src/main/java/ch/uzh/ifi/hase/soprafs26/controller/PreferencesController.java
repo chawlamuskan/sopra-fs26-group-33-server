@@ -1,5 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -85,4 +88,21 @@ public class PreferencesController {
 		preferencesService.savePreferences(id, preferences);
 	}
 
+	// Get Saved Countries (UNION of visited & wishlist Countries)
+	@GetMapping("/users/{userId}/savedcountries")
+	@ResponseStatus(HttpStatus.OK)  // GET /users/{userId}/savedcountries - 200 OK
+	@ResponseBody
+	public List<Map<String, String>> getSavedCountries(
+		@PathVariable Long userId,
+		@RequestHeader(value = "Authorization", required = false) String token) {
+	
+		// check if the user is logged in and the token belongs to the user whose data are fetched
+        User loggedInUser = userService.validateToken(token);
+		if (!loggedInUser.getId().equals(userId)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
+				"You are not allowed to set other users' preferences.");
+		}
+
+		return preferencesService.getSavedCountries(userId);
+	}
 }
