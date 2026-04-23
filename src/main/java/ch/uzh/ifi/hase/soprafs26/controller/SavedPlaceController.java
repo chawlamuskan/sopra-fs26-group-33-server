@@ -58,5 +58,23 @@ public class SavedPlaceController {
         return DTOMapper.INSTANCE.convertEntityToSavedPlaceGetDTO(createdSavedPlace);
     }
     
+    @GetMapping("/users/{userId}/savedplaces")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<SavedPlaceGetDTO> getSavedPlacesByUser (
+        @PathVariable Long userId,
+        @RequestHeader (value = "Authorization", required = false) String token
+    ) {
+        userService.validateToken(token);
+        List<SavedPlace> savedPlaces = savedPlaceService.getSavedPlacesByUser(userId);
+        List<SavedPlaceGetDTO> savedPlaceGetDTOs = new ArrayList<>();
+
+        for (SavedPlace savedPlace : savedPlaces) {
+            SavedPlaceGetDTO dto = DTOMapper.INSTANCE.convertEntityToSavedPlaceGetDTO(savedPlace);
+            savedPlaceGetDTOs.add(dto);
+            
+        }
+        return savedPlaceGetDTOs;
+    }
     
 }
