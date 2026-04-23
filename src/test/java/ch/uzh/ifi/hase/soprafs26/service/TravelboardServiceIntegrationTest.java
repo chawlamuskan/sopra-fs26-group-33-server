@@ -185,7 +185,7 @@ public class TravelboardServiceIntegrationTest {
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 
-    //#136 - Duplicate invite Code
+    //#136 - Duplicate invite Code ,#138
     @Test
     public void createTravelBoard_duplicateInviteCode_throwsConflict() {
         // create user
@@ -335,7 +335,7 @@ public class TravelboardServiceIntegrationTest {
         assertNotEquals(inviteCode1, inviteCode2);
     }
 
-    //#153
+    //#153,#117
     @Test
     public void joinTravelBoard_validCode_userAddedToMembers() {
         // create user

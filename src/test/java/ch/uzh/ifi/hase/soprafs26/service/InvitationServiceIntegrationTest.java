@@ -55,7 +55,7 @@ public class InvitationServiceIntegrationTest {
         userRepository.deleteAll();
 	}
     
-    //#155
+    //#155,#181
     @Test
     public void acceptInvitation_validPendingInvitation_addsUserAsBoardMember() {
         // create user: sender/owner
@@ -110,7 +110,7 @@ public class InvitationServiceIntegrationTest {
         assertEquals(InviteStatus.ACCEPTED, updatedInvitation.getStatus());
     }
 
-    //#156
+    //#156,#183
     @Test
     public void declineInvitation_validPendingInvitation_doesNotAddUserAsBoardMember() {
         // create user: sender/owner
