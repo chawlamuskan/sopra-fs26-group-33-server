@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.server.ResponseStatusException;
+
 import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
@@ -55,6 +58,169 @@ public class TravelboardServiceIntegrationTest {
         userRepository.deleteAll();
 	}
     
+    //#135
+    @Test
+    public void createTravelBoard_validInput_createsTravelBoard() {
+        // create user
+        User user = new User();
+        user.setName("owner");
+        user.setUsername("owner123");
+        user.setPassword("pw");
+        user.setEmail("owner123@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("token123");
+        user = userRepository.save(user);
+
+        // create travel board input
+        TravelBoard board = new TravelBoard();
+        board.setName("Test Board");
+        board.setInviteCode("CRE123");
+        board.setPrivacy(PrivacyLevel.PRIVATE);
+        board.setDateCreated(LocalDate.now());
+
+        // create board
+        TravelBoard createdBoard = travelBoardService.createTravelBoard(board, user.getToken());
+
+        // assert
+        assertNotNull(createdBoard.getId());
+        assertEquals("Test Board", createdBoard.getName());
+        assertEquals(user.getId(), createdBoard.getOwner().getId());
+        assertEquals("CRE123", createdBoard.getInviteCode());
+        assertEquals(PrivacyLevel.PRIVATE, createdBoard.getPrivacy());
+
+        TravelBoard storedBoard = travelBoardRepository.findById(createdBoard.getId()).orElseThrow();
+        assertEquals("Test Board", storedBoard.getName());
+    }
+
+    //#136 - Missing name
+    @Test
+    public void createTravelBoard_missingName_throwsBadRequest() {
+        // create user
+        User user = new User();
+        user.setName("owner");
+        user.setUsername("owner123");
+        user.setPassword("pw");
+        user.setEmail("owner123@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("token123");
+        user = userRepository.save(user);
+        String userToken = user.getToken();
+
+        //create board
+        TravelBoard board = new TravelBoard();
+        board.setName(null);
+        board.setPrivacy(PrivacyLevel.PRIVATE);
+        board.setInviteCode("CODE123");
+
+        // assert
+        ResponseStatusException exception = assertThrows(
+            ResponseStatusException.class,
+            () -> travelBoardService.createTravelBoard(board, userToken)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
+    //#136 - Missing privacy
+    @Test
+    public void createTravelBoard_missingPrivacy_throwsBadRequest() {
+        // create user
+        User user = new User();
+        user.setName("owner");
+        user.setUsername("owner123");
+        user.setPassword("pw");
+        user.setEmail("owner123@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("token123");
+        user = userRepository.save(user);
+        String userToken = user.getToken();
+
+        //create board
+        TravelBoard board = new TravelBoard();
+        board.setName("Trip");
+        board.setPrivacy(null);
+        board.setInviteCode("CODE123");
+
+        // assert
+        ResponseStatusException exception = assertThrows(
+            ResponseStatusException.class,
+            () -> travelBoardService.createTravelBoard(board, userToken)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
+    //#136 - Invalid dates
+    @Test
+    public void createTravelBoard_startDateAfterEndDate_throwsBadRequest() {
+        // create user
+        User user = new User();
+        user.setName("owner");
+        user.setUsername("owner123");
+        user.setPassword("pw");
+        user.setEmail("owner123@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("token123");
+        user = userRepository.save(user);
+        String userToken = user.getToken();
+
+        //create board
+        TravelBoard board = new TravelBoard();
+        board.setName("Trip");
+        board.setPrivacy(PrivacyLevel.PRIVATE);
+        board.setInviteCode("CODE123");
+        board.setStartDate(LocalDate.of(2026, 6, 10));
+        board.setEndDate(LocalDate.of(2026, 6, 5));
+
+        // assert
+        ResponseStatusException exception = assertThrows(
+            ResponseStatusException.class,
+            () -> travelBoardService.createTravelBoard(board, userToken)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
+    //#136 - Duplicate invite Code
+    @Test
+    public void createTravelBoard_duplicateInviteCode_throwsConflict() {
+        // create user
+        User user = new User();
+        user.setName("owner");
+        user.setUsername("owner123");
+        user.setPassword("pw");
+        user.setEmail("owner123@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("token123");
+        user = userRepository.save(user);
+        String userToken = user.getToken();
+
+        //create first board
+        TravelBoard firstBoard = new TravelBoard();
+        firstBoard.setName("First Trip");
+        firstBoard.setPrivacy(PrivacyLevel.PRIVATE);
+        firstBoard.setInviteCode("DUP123");
+        firstBoard = travelBoardService.createTravelBoard(firstBoard, userToken);
+
+        //create second board with the same invite Code
+        TravelBoard secondBoard = new TravelBoard();
+        secondBoard.setName("Second Trip");
+        secondBoard.setPrivacy(PrivacyLevel.PRIVATE);
+        secondBoard.setInviteCode("DUP123");
+
+        ResponseStatusException exception = assertThrows(
+            ResponseStatusException.class,
+            () -> travelBoardService.createTravelBoard(secondBoard, userToken)
+        );
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+    }
+
     //#118
     @Test
     public void deleteTravelBoard_removesBoardFromDatabase() {
@@ -129,6 +295,44 @@ public class TravelboardServiceIntegrationTest {
         TravelBoard updated = travelBoardRepository.findById(boardId).orElseThrow();
 
         assertEquals("New Name", updated.getName());
+    }
+
+    //#139
+    @Test
+    public void getInviteCode_returnsCorrectCodeForEachBoard() {
+        // create user
+        User user = new User();
+        user.setName("owner");
+        user.setUsername("owner123");
+        user.setPassword("pw");
+        user.setEmail("owner123@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("token123");
+        user = userRepository.save(user);
+
+        // create first board
+        TravelBoard board1 = new TravelBoard();
+        board1.setName("First Trip");
+        board1.setPrivacy(PrivacyLevel.PRIVATE);
+        board1.setInviteCode("1CODE123");
+        board1 = travelBoardService.createTravelBoard(board1, user.getToken());
+
+        // create second board
+        TravelBoard board2 = new TravelBoard();
+        board2.setName("SecondTrip");
+        board2.setPrivacy(PrivacyLevel.PUBLIC);
+        board2.setInviteCode("2CODE123");
+        board2 = travelBoardService.createTravelBoard(board2, user.getToken());
+
+        // get invite codes
+        String inviteCode1 = travelBoardService.getInviteCode(board1.getId());
+        String inviteCode2 = travelBoardService.getInviteCode(board2.getId());
+
+        // assert
+        assertEquals("1CODE123", inviteCode1);
+        assertEquals("2CODE123", inviteCode2);
+        assertNotEquals(inviteCode1, inviteCode2);
     }
 
     //#153
