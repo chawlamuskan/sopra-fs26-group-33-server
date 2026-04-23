@@ -23,6 +23,9 @@ public class TravelBoard implements Serializable {
 	private String name;
 
 	@Column(nullable = true)
+	private String location;
+
+	@Column(nullable = true)
 	private LocalDate startDate;
 
 	@Column(nullable = true)
@@ -32,7 +35,7 @@ public class TravelBoard implements Serializable {
 	@JoinColumn(name = "owner_id", nullable = false)
 	private User owner;
 
-	@Column(nullable = false, unique = true)
+	@Column(nullable = true, unique = true)
 	private String inviteCode;		
 
 	@Column(nullable = false)
@@ -63,6 +66,14 @@ public class TravelBoard implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
 	}
 
 	public LocalDate getStartDate() {

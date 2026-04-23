@@ -53,11 +53,22 @@ public class TravelBoardService {
             && newTravelBoard.getStartDate().isAfter(newTravelBoard.getEndDate())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date cannot be after end date");
         }
-        if (newTravelBoard.getInviteCode() == null || newTravelBoard.getInviteCode().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invite code cannot be empty");
+
+        String inviteCode = newTravelBoard.getInviteCode();
+        if (inviteCode != null && !inviteCode.trim().isEmpty()) {
+            inviteCode = inviteCode.trim().toUpperCase();
+            if (travelBoardRepository.findByInviteCode(inviteCode) != null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Invite code already exists");
+            }
+            newTravelBoard.setInviteCode(inviteCode);
         }
-        if (travelBoardRepository.findByInviteCode(newTravelBoard.getInviteCode()) != null) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invite code already exists");
+        else {
+            newTravelBoard.setInviteCode(null);
+        }
+
+        String location = newTravelBoard.getLocation();
+        if (location != null && location.trim().isEmpty()) {
+            newTravelBoard.setLocation(null);
         }
 
         newTravelBoard.setOwner(owner);

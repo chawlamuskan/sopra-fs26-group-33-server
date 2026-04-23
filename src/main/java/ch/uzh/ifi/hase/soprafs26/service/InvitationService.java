@@ -60,6 +60,12 @@ public class InvitationService {
         User receiver = userRepository.findById(receiverId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Receiver not found"));
 
+        Invitation pendingInvitation = invitationRepository.findByBoardAndReceiverAndStatus(board, receiver, InviteStatus.PENDING);
+        
+        if (pendingInvitation != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A pending invitation for this user and travel board already exists");
+        }
+
         Invitation newInvitation = new Invitation();
         newInvitation.setStatus(InviteStatus.PENDING);
         newInvitation.setBoard(board);

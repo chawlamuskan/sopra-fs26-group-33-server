@@ -3,8 +3,9 @@ import jakarta.persistence.*;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.ArrayList;	
-import java.util.List;
+import java.util.ArrayList;
+import java.util.List;	
+
 /**
  * Internal User Representation
  * This class composes the internal representation of the user and defines how
@@ -44,21 +45,20 @@ public class User implements Serializable {
 	@Column(nullable = false)
 	private String password;
 
-	@Column
-	private String bio;
-
 	@Column(nullable = false)
 	private LocalDate creationDate;
 
-	@ElementCollection
-	@CollectionTable(name = "user_visited_countries", joinColumns = @JoinColumn(name = "user_id"))
-	@Column(name = "country_name")
-	private List<String> countriesVisited = new ArrayList<>();
+	@ManyToMany
+	@JoinTable(
+	    name = "user_friends",
+	    joinColumns = @JoinColumn(name = "user_id"),
+	    inverseJoinColumns = @JoinColumn(name = "friend_id")
+	)
+	
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Preferences preferences;
 
-	@ElementCollection
-	@CollectionTable(name = "user_wishlist_countries", joinColumns = @JoinColumn(name = "user_id"))
-	@Column(name = "country_name")
-	private List<String> countriesWishlist = new ArrayList<>();
+	private List<User> friends = new ArrayList<>();	
 
 	public Long getId() {
 		return id;
@@ -108,14 +108,7 @@ public class User implements Serializable {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
-	public String getBio() {
-		return bio;
-	}
-	public void setBio(String bio) {
-		this.bio = bio;
-	}
-
+	
 	public LocalDate getCreationDate() {
 		return creationDate;
 	}
@@ -123,18 +116,11 @@ public class User implements Serializable {
 		this.creationDate = creationDate;
 	}
 
-	public List<String> getCountriesVisited() { 
-		return countriesVisited; 
+	public List<User> getFriends() {
+		return friends;
 	}
-	public void setCountriesVisited(List<String> countriesVisited) { 
-		this.countriesVisited = countriesVisited; 
-	}
-
-	public List<String> getCountriesWishlist() { 
-		return countriesWishlist; 
-	}
-	public void setCountriesWishlist(List<String> countriesWishlist) { 
-		this.countriesWishlist = countriesWishlist; 
+	public void setFriends(List<User> friends) {
+		this.friends = friends;
 	}
 
 }

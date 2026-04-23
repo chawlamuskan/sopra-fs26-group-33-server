@@ -1,12 +1,10 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedCountryDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
@@ -110,22 +108,20 @@ public class UserController {
 
 	// Update user information (user will be logged out after password change)
 	@PutMapping("/users/{id}")
-	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseStatus(HttpStatus.NO_CONTENT) // PUT /users/{id} -> status code 204 (HttpStatus.NO_CONTENT)
+	@ResponseBody
 	public void updateUser(
 		@PathVariable Long id,
 		@RequestBody UserPutDTO userPutDTO) {
 
+		// Fetch the user by id
 		User user = userService.getUserById(id);
+		
+		// If the user is not found, throw a 404
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
 		}
-
-		// only update password if it was provided
-		if (userPutDTO.getPassword() != null && !userPutDTO.getPassword().trim().isEmpty()) {
-			userService.updatePassword(id, userPutDTO.getPassword());
-		}
-
-		userService.updateUser(id, userPutDTO);
+		userService.updatePassword(id, userPutDTO.getPassword());
 	}
 
 	//shows matching users while typing
@@ -143,11 +139,5 @@ public class UserController {
   
 	 	return userGetDTOs;
 	}
-
-	@GetMapping("/users/{userId}/savedcountries")
-	public ResponseEntity<List<SavedCountryDTO>> getSavedCountries(@PathVariable Long userId) {
-		List<SavedCountryDTO> result = userService.getSavedCountries(userId);
-		return ResponseEntity.ok(result);
-}
 
 }

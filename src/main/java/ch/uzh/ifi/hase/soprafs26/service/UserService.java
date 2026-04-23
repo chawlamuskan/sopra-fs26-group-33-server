@@ -1,7 +1,5 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,14 +9,9 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedCountryDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.Set;
 
 /**
  * User Service
@@ -30,8 +23,6 @@ import java.util.Set;
 @Service
 @Transactional
 public class UserService {
-
-	private final Logger log = LoggerFactory.getLogger(UserService.class);
 
 	private final UserRepository userRepository;
 
@@ -46,13 +37,15 @@ public class UserService {
 	// Register new user
 	public User createUser(User newUser) {
 		checkIfUserExists(newUser);	// check if username or name already exists
+		validateEmail(newUser.getEmail());	// validate email format
 		validatePassword(newUser.getPassword()); // validate password format
+
 		newUser.setToken(UUID.randomUUID().toString()); // set default values
 		newUser.setStatus(UserStatus.ONLINE);
 		newUser.setCreationDate(java.time.LocalDate.now());	// set creation date (added this to User.java)
-		newUser = userRepository.save(newUser);	// save the user with all fields including password and bio
 
-		log.debug("Created Information for User: {}", newUser);
+		newUser = userRepository.save(newUser);	// save the user with all fields including password
+
 		return newUser;
 	}
 
@@ -74,6 +67,21 @@ public class UserService {
 		if (!password.matches(".*[^a-zA-Z0-9].*")) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
 				"Password must contain at least one special character");
+		}
+	}
+
+	// Check valid email format during registration
+	// POST /users 400 BAD REQUEST
+	private void validateEmail(String email) {
+		if (email == null || email.trim().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Email cannot be empty");
+		}
+
+		String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+		if (!email.matches(emailRegex)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+				"Invalid email format. Expected format: example@domain.com");
 		}
 	}
 
@@ -135,7 +143,7 @@ public class UserService {
     }
 
 	// Validate that the token exists and belongs to a real logged-in user
-	public void validateToken(String token) {
+	public User validateToken(String token) {
 		if (token == null || token.trim().isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided");
 		}
@@ -146,6 +154,7 @@ public class UserService {
 		if (user.getStatus() == UserStatus.OFFLINE) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not logged in");
 		}
+		return user;
 	}
 	
 	// Check uniqueness criteria of the username and email #43
@@ -156,13 +165,13 @@ public class UserService {
 
 		if (userByUsername != null && userByEmail != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
-				"Registration failed: username & email already exist");
+				"Registration failed: Username & email already exist");
 		} else if (userByUsername != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
-				"Registration failed: username already exists");
+				"Registration failed: Username already exists");
 		} else if (userByEmail != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, 
-				"Registration failed: email already exists");
+				"Registration failed: Email already exists");
 		}
 	}
 
@@ -174,39 +183,4 @@ public class UserService {
 		return userRepository.findByUsernameContainingIgnoreCase(username.trim());
 	}
 
-	public List<SavedCountryDTO> getSavedCountries(Long userId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-		List<SavedCountryDTO> result = new ArrayList<>();
-
-		Set<String> visited = new HashSet<>(user.getCountriesVisited());
-
-		for (String country : user.getCountriesVisited()) {
-			result.add(new SavedCountryDTO(country, "visited"));
-		}
-		for (String country : user.getCountriesWishlist()) {
-			if (!visited.contains(country)) {
-				result.add(new SavedCountryDTO(country, "wishlist"));
-			}
-		}
-		return result;
-	}
-
-	public User updateUser(Long userId, UserPutDTO userPutDTO) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-		if (userPutDTO.getBio() != null) {
-			user.setBio(userPutDTO.getBio());
-		}
-		if (userPutDTO.getCountries_visited() != null) {
-			user.setCountriesVisited(userPutDTO.getCountries_visited());
-		}
-		if (userPutDTO.getCountries_wishlist() != null) {
-			user.setCountriesWishlist(userPutDTO.getCountries_wishlist());
-		}
-
-		return userRepository.save(user);
-	}
 }
