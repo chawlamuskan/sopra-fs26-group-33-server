@@ -7,9 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-// import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
-// import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPutDTO;
@@ -107,17 +105,6 @@ public class TravelBoardController {
         travelBoardService.joinTravelBoardByInviteCode(token, inviteCode);
 
 	}
-
-    // @PostMapping("/travelboards/{boardId}/places")
-    // @ResponseStatus(HttpStatus.CREATED)
-    // @ResponseBody
-    // public void addPlaceToBoard(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token, @RequestBody PlacePostDTO placePostDTO) {
-    //     userService.validateToken(token);
-
-    //     Place placeInput = DTOMapper.INSTANCE.convertPlacePostDTOtoEntity(placePostDTO);
-
-    //     travelBoardService.addPlaces(boardId, token, placeInput);
-    // }
 
 
 }

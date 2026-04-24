@@ -104,12 +104,6 @@ public interface DTOMapper {
 	@Mapping(source = "sender.username", target = "senderUsername")
     InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
 
-	// ==================== Places Mappings ====================
-	// @Mapping(source = "name", target = "name")
-	// @Mapping(source = "latitude", target = "latitude")
-	// @Mapping(source = "longitude", target = "longitude")
-    // Place convertPlacePostDTOtoEntity(PlacePostDTO placePostDTO);
-
 	// ==================== Friend Request Mappings ====================
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "sender.id", target = "senderId")
