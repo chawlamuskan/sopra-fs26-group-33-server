@@ -5,7 +5,7 @@ import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
 import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
-import ch.uzh.ifi.hase.soprafs26.entity.Place;
+// import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -17,7 +17,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlaceGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.FriendRequestGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InvitationGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
+// import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
@@ -105,10 +105,10 @@ public interface DTOMapper {
     InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
 
 	// ==================== Places Mappings ====================
-	@Mapping(source = "name", target = "name")
-	@Mapping(source = "latitude", target = "latitude")
-	@Mapping(source = "longitude", target = "longitude")
-    Place convertPlacePostDTOtoEntity(PlacePostDTO placePostDTO);
+	// @Mapping(source = "name", target = "name")
+	// @Mapping(source = "latitude", target = "latitude")
+	// @Mapping(source = "longitude", target = "longitude")
+    // Place convertPlacePostDTOtoEntity(PlacePostDTO placePostDTO);
 
 	// ==================== Friend Request Mappings ====================
 	@Mapping(source = "id", target = "id")
@@ -124,8 +124,8 @@ public interface DTOMapper {
 	@Mapping(source = "address", target = "address")
 	@Mapping(source = "rating", target = "rating")
 	@Mapping(source = "photoReference", target = "photoReference")
-	@Mapping(source = "lat", target = "lng")
-	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "lat", target = "lat")
+	@Mapping(source = "lng", target = "lng")
 	@Mapping(source = "types", target = "types")
 	SavedPlace convertSavedPlacePostDTOToEntity(SavedPlacePostDTO savedPlacePostDTO);
 
@@ -135,8 +135,8 @@ public interface DTOMapper {
 	@Mapping(source = "address", target = "address")
 	@Mapping(source = "rating", target = "rating")
 	@Mapping(source = "photoReference", target = "photoReference")
-	@Mapping(source = "lat", target = "lng")
-	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "lat", target = "lat")
+	@Mapping(source = "lng", target = "lng")
 	@Mapping(source = "types", target = "types")
 	SavedPlaceGetDTO convertEntityToSavedPlaceGetDTO(SavedPlace savedPlace);
 
@@ -146,8 +146,8 @@ public interface DTOMapper {
 	@Mapping(source = "address", target = "address")
 	@Mapping(source = "rating", target = "rating")
 	@Mapping(source = "photoReference", target = "photoReference")
-	@Mapping(source = "lat", target = "lng")
-	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "lat", target = "lat")
+	@Mapping(source = "lng", target = "lng")
 	@Mapping(source = "types", target = "types")
 	TravelBoardPlace convertTravelBoardPlacePostDTOToEntity(TravelBoardPlacePostDTO travelBoardPlacePostDTO);
 
@@ -157,8 +157,8 @@ public interface DTOMapper {
 	@Mapping(source = "address", target = "address")
 	@Mapping(source = "rating", target = "rating")
 	@Mapping(source = "photoReference", target = "photoReference")
-	@Mapping(source = "lat", target = "lng")
-	@Mapping(source = "lat", target = "lng")
+	@Mapping(source = "lat", target = "lat")
+	@Mapping(source = "lng", target = "lng")
 	@Mapping(source = "types", target = "types")
 	TravelBoardPlaceGetDTO convertEntityToTravelBoardPlaceGetDTO(TravelBoardPlace travelBoardPlace);
 

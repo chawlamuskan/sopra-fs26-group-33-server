@@ -47,8 +47,8 @@ public class TravelBoard implements Serializable {
     @ManyToMany
 	private List<User> members = new ArrayList<>();
     
-    @ManyToMany
-	private List<Place> places = new ArrayList<>();	
+    // @ManyToMany
+	// private List<Place> places = new ArrayList<>();	
 
 
 
@@ -132,11 +132,11 @@ public class TravelBoard implements Serializable {
 		this.members = members;
 	}
 
-	public List<Place> getPlaces() {
-		return places;
-	}
+	// public List<Place> getPlaces() {
+	// 	return places;
+	// }
 
-	public void setPlaces(List<Place> places) {
-		this.places = places;
-	}
+	// public void setPlaces(List<Place> places) {
+	// 	this.places = places;
+	// }
 }
