@@ -41,6 +41,7 @@ public class TravelBoardPlaceService {
         checkIfPlaceAlreadySaved(newTravelBoardPlace, board);
 
         newTravelBoardPlace.setBoard(board);
+        newTravelBoardPlace.setUser(user);
         
         return travelBoardPlaceRepository.save(newTravelBoardPlace);
     }
