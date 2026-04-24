@@ -117,4 +117,4 @@ Then, run the image in a container with the following command, again replacing _
 
 ```docker run -p 3000:3000 <dockerhub_username>/<dockerhub_repo_name>```
 
-change in readme for google cloud trigger deployment and sonar
+change in readme for google cloud trigger deployment & sonar 
