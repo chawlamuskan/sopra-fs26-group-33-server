@@ -5,7 +5,10 @@ import tools.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs26.service.TravelBoardService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
+import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
+import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPutDTO;
 
 import org.junit.jupiter.api.Test;
@@ -22,7 +25,11 @@ import org.springframework.web.server.ResponseStatusException;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
+import java.util.ArrayList;
 
 
 @WebMvcTest(TravelBoardController.class)
@@ -176,6 +183,75 @@ public class TravelBoardControllerTest {
         mockMvc.perform(postRequest)
                 .andExpect(status().isUnauthorized());
     }
+
+    //#115
+    @Test
+    public void getTravelBoardsByUser_validToken_ok() throws Exception {
+        String token = "ABC";
+    
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+        Mockito.when(travelBoardService.getTravelBoardsByUser(token))
+                .thenReturn(new ArrayList<>());
+    
+        MockHttpServletRequestBuilder getRequest = get("/travelboards")
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+    
+        mockMvc.perform(getRequest)
+                .andExpect(status().isOk());
+    }
+
+    //135
+    @Test
+    public void createTravelBoard_validInput_created() throws Exception {
+        String token = "ABC";
+    
+        TravelBoardPostDTO travelBoardPostDTO = new TravelBoardPostDTO();
+        travelBoardPostDTO.setName("Test Board");
+        travelBoardPostDTO.setInviteCode("CRE123");
+        travelBoardPostDTO.setPrivacy(PrivacyLevel.PRIVATE);
+    
+        User user = new User();
+        user.setId(1L);
+        user.setToken(token);
+    
+        TravelBoard createdBoard = new TravelBoard();
+        createdBoard.setId(1L);
+        createdBoard.setName("Test Board");
+        createdBoard.setInviteCode("CRE123");
+        createdBoard.setPrivacy(PrivacyLevel.PRIVATE);
+        createdBoard.setOwner(user);
+    
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+        Mockito.when(travelBoardService.createTravelBoard(Mockito.any(TravelBoard.class), Mockito.eq(token)))
+                .thenReturn(createdBoard);
+    
+        MockHttpServletRequestBuilder postRequest = post("/travelboards")
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(travelBoardPostDTO));
+    
+        mockMvc.perform(postRequest)
+                .andExpect(status().isCreated());
+    }
+
+    //#139
+    @Test
+    public void getInviteCode_validBoardId_ok() throws Exception {
+        Long boardId = 1L;
+    
+        Mockito.when(travelBoardService.getInviteCode(boardId))
+                .thenReturn("CRE123");
+    
+        MockHttpServletRequestBuilder getRequest = get("/travelboards/{boardId}/inviteCode", boardId)
+                .contentType(MediaType.APPLICATION_JSON);
+    
+        mockMvc.perform(getRequest)
+                .andExpect(status().isOk())
+                .andExpect(content().string("CRE123"));
+    }
+    
 	
 
 	/**
