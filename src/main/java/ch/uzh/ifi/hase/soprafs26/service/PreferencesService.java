@@ -51,9 +51,9 @@ public class PreferencesService {
 
         if (newPreferences.getBio() != null) { existing.setBio(newPreferences.getBio());}
         if (newPreferences.getProfilePicture() != null) { existing.setProfilePicture(newPreferences.getProfilePicture()); }
-        if (newPreferences.getVisitedCountries() != null) { existing.setVisitedCountries(newPreferences.getVisitedCountries()); }
-        if (newPreferences.getWishlistCountries() != null) { existing.setWishlistCountries(newPreferences.getWishlistCountries());}
-        if (newPreferences.getFriends() != null) { existing.setFriends(newPreferences.getFriends());}
+        if (newPreferences.getVisitedCountries() != null) { existing.setVisitedCountries(new ArrayList<>(newPreferences.getVisitedCountries())); }
+        if (newPreferences.getWishlistCountries() != null) { existing.setWishlistCountries(new ArrayList<>(newPreferences.getWishlistCountries()));}
+        if (newPreferences.getFriends() != null) { existing.setFriends(new ArrayList<>(newPreferences.getFriends()));}
         
         return preferencesRepository.save(existing);
     }

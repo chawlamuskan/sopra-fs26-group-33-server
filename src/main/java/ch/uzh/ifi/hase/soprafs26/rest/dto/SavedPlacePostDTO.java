@@ -1,65 +1,17 @@
-package ch.uzh.ifi.hase.soprafs26.entity;
+package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
-import jakarta.persistence.*;
-
-import java.io.Serializable;
 import java.util.Set;
 
+public class SavedPlacePostDTO {
 
-@Entity
-@Table(
-    name = "savedPlaces",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"externalPlaceId", "user_id"}), // a user can only save a specific place once
-    }
-)
-
-public class SavedPlace implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    @Id
-	@GeneratedValue
-	private Long id;
-
-    @Column(nullable = false)
     private String externalPlaceId;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
+    private String name; 
     private String address;
-
-    @Column(nullable = true)
     private Double rating;
-
-    @Column(nullable = true)
     private String photoReference;
-
-    @Column(nullable = true)
     private Double lat;
-
-    @Column(nullable = true)
     private Double lng;
-
-    @ElementCollection
-    @CollectionTable(name = "place_types", joinColumns = @JoinColumn(name = "place_id"))
-    @Column(name = "type")
     private Set<String> types;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true)
-    private User user;
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getExternalPlaceId() {
         return externalPlaceId;
@@ -77,10 +29,10 @@ public class SavedPlace implements Serializable {
         this.name = name;
     }
 
-    public String getAddress() {
+      public String getAddress() {
         return address;
     }
-    
+
     public void setAddress(String address) {
         this.address = address;
     }
@@ -125,12 +77,5 @@ public class SavedPlace implements Serializable {
         this.types = types;
     }
 
-    public User getuser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
+    
 }

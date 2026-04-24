@@ -5,16 +5,16 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
 
-
 @Entity
 @Table(
     name = "savedPlaces",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"externalPlaceId", "user_id"}), // a user can only save a specific place once
+        @UniqueConstraint(columnNames = {"externalPlaceId", "user_id"}), // we want to know which user has added the place
+        @UniqueConstraint(columnNames = {"externalPlaceId", "board_id"}) // a place can only be saved once per board
     }
 )
 
-public class SavedPlace implements Serializable {
+public class TravelBoardPlace implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -49,9 +49,12 @@ public class SavedPlace implements Serializable {
     private Set<String> types;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "board_id", nullable = false)
+    private TravelBoard board;
 
     public Long getId() {
         return id;
@@ -125,7 +128,7 @@ public class SavedPlace implements Serializable {
         this.types = types;
     }
 
-    public User getuser() {
+    public User getUser() {
         return user;
     }
 
@@ -133,4 +136,12 @@ public class SavedPlace implements Serializable {
         this.user = user;
     }
 
+    public TravelBoard getBoard() {
+        return board;
+    }
+
+    public void setBoard(TravelBoard board) {
+        this.board = board;
+    }
+    
 }

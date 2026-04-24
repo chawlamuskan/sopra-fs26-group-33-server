@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -117,6 +118,62 @@ public class TravelBoardControllerTest {
                 .contentType(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(deleteRequest)
+                .andExpect(status().isUnauthorized());
+    }
+
+    //#153
+    @Test
+    public void joinTravelBoard_validCode_ok() throws Exception {
+        String token = "ABC";
+        String inviteCode = "VALID123";
+
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+        Mockito.doNothing().when(travelBoardService).joinTravelBoardByInviteCode(token, inviteCode);
+
+        MockHttpServletRequestBuilder postRequest = post("/travelboards/join")
+                .param("inviteCode", inviteCode)
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isOk());
+    }
+
+    //#154
+    @Test
+    public void joinTravelBoard_invalidCode_notFound() throws Exception {
+        String token = "ABC";
+        String inviteCode = "INVALID123";
+
+        User user = new User();
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+        Mockito.doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Invite code is invalid"))
+                .when(travelBoardService)
+                .joinTravelBoardByInviteCode(token, inviteCode);
+
+        MockHttpServletRequestBuilder postRequest = post("/travelboards/join")
+                .param("inviteCode", inviteCode)
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isNotFound());
+    }
+
+    //#152
+    @Test
+    public void joinTravelBoard_missingToken_unauthorized() throws Exception {
+        String inviteCode = "BOARD123";
+
+        Mockito.when(userService.validateToken((String) Mockito.isNull()))
+                .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
+
+        MockHttpServletRequestBuilder postRequest = post("/travelboards/join")
+                .param("inviteCode", inviteCode)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(postRequest)
                 .andExpect(status().isUnauthorized());
     }
 	
