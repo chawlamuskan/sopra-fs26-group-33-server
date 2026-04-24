@@ -22,6 +22,8 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlaceGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlacePostDTO;
 
 /**
  * DTOMapper
@@ -147,7 +149,7 @@ public interface DTOMapper {
 	@Mapping(source = "lat", target = "lng")
 	@Mapping(source = "lat", target = "lng")
 	@Mapping(source = "types", target = "types")
-	TravelBoardPlace convertTravelBoardPlacePostDTOToEntity(TravelBoardPostDTO travelBoardPostDTO);
+	TravelBoardPlace convertTravelBoardPlacePostDTOToEntity(TravelBoardPlacePostDTO travelBoardPlacePostDTO);
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "externalPlaceId", target = "externalPlaceId")
@@ -158,6 +160,6 @@ public interface DTOMapper {
 	@Mapping(source = "lat", target = "lng")
 	@Mapping(source = "lat", target = "lng")
 	@Mapping(source = "types", target = "types")
-	TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoardPlace travelBoardPlace);
+	TravelBoardPlaceGetDTO convertEntityToTravelBoardPlaceGetDTO(TravelBoardPlace travelBoardPlace);
 
 }
