@@ -17,6 +17,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlaceGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.TravelBoardPlaceService;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 
@@ -39,10 +40,10 @@ public class TravelBoardPlaceController {
         @RequestBody TravelBoardPlacePostDTO travelBoardPlacePostDTO,
         @RequestHeader(value = "Authorization", required = false) String token) {
         
-        userService.validateToken(token);
+        User loggedInUser =userService.validateToken(token);
         TravelBoardPlace travelBoardPlace = DTOMapper.INSTANCE.convertTravelBoardPlacePostDTOToEntity(travelBoardPlacePostDTO);
 
-        TravelBoardPlace createdTravelBoardPlace = travelBoardPlaceService.saveToBoard(boardId, travelBoardPlace);
+        TravelBoardPlace createdTravelBoardPlace = travelBoardPlaceService.saveToBoard(boardId, travelBoardPlace, loggedInUser);
 
         return DTOMapper.INSTANCE.convertEntityToTravelBoardPlaceGetDTO(createdTravelBoardPlace);
         
