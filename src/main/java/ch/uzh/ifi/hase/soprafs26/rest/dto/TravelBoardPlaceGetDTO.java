@@ -13,6 +13,7 @@ public class TravelBoardPlaceGetDTO {
     private Double lat;
     private Double lng;
     private Set<String> types;
+    private Long addedByUserId;
     
     public Long getId() {
         return id;
@@ -86,5 +87,12 @@ public class TravelBoardPlaceGetDTO {
         this.types = types;
     }
 
+    public Long getAddedByUserId() {
+        return addedByUserId;
+    }
+
+    public void setAddedByUserId(Long addedByUserId) {
+        this.addedByUserId = addedByUserId;
+    }
     
 }
