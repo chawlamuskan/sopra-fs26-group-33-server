@@ -17,6 +17,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -206,5 +207,86 @@ public class PreferencesServiceIntegrationTest {
         // THEN an error is thrown
         assertThrows(ResponseStatusException.class, () -> 
                 preferencesService.getPreferences(999L));
+    }
+
+    // ================ UPDATE PREFERENCES TESTS ================
+    @Test   // test that partial update only changes provided fields
+    @Transactional
+    public void updatePreferences_partialUpdate_onlyUpdatesProvidedFields() {
+        // GIVEN a user with exisitng full preferences
+        Preferences initial = new Preferences();
+        initial.setBio("Original bio");
+        initial.setProfilePicture(("original.jpg"));
+        initial.setVisitedCountries(List.of("Switzerland"));
+        initial.setWishlistCountries(List.of("Japan"));
+        initial.setFriends(List.of(2L));
+        preferencesService.savePreferences(testUser.getId(), initial);
+
+        // WHEN updating only visited countries
+        Preferences update = new Preferences();
+        update.setVisitedCountries(List.of("Switzerland", "Germany"));
+
+        Preferences updated = preferencesService.savePreferences(testUser.getId(), update);
+
+        // THEN only visited countries changed, all other fields remain unchanged
+        assertEquals(List.of("Switzerland", "Germany"), updated.getVisitedCountries());   // updated
+        assertEquals("Original bio", updated.getBio());                         // unchanged
+        assertEquals("original.jpg", updated.getProfilePicture());              // unchanged
+        assertEquals(List.of("Japan"), updated.getWishlistCountries());               // unchanged
+        assertEquals(List.of(2L), updated.getFriends());                              // unchanged
+    }
+
+    @Test   // test that saving for non-existent user throws 404
+    public void savePreferences_nonExistentUser_throwsNotFound() {
+        // GIVEN a non-existent user ID
+        Preferences preferences = new Preferences();
+        preferences.setBio("Test bio");
+        
+        // WHEN saving preferences for non-existent user
+        // THEN a 404 NOT FOUND error is thrown
+        assertThrows(ResponseStatusException.class, () ->
+            preferencesService.savePreferences(999L, preferences));
+    }
+
+    // ================ GET SAVED COUNTRIES TESTS ================
+    @Test   // test that visited and wishlist countries saved
+    @Transactional
+    public void getSavedCountries_bothLists_returnsUnion() {
+        // GIVEN a user with visited and wishlist countries saved
+        Preferences preferences = new Preferences();
+        preferences.setVisitedCountries(List.of("Switzerland", "Germany"));
+        preferences.setWishlistCountries(List.of("Japan", "Brazil"));
+        preferencesService.savePreferences(testUser.getId(), preferences);
+
+        // WHEN fetching saved countries
+        List<Map<String, String>> result = preferencesService.getSavedCountries(testUser.getId());
+
+        // THEN all countries are returned with correct status
+        assertEquals(4, result.size());
+        assertTrue(result.stream().anyMatch(c ->
+                c.get("countryName").equals("Switzerland") && c.get("status").equals("visited")));
+        assertTrue(result.stream().anyMatch(c ->
+                c.get("countryName").equals("Japan") && c.get("status").equals("wishlist")));
+    }
+
+    @Test   // test that a country in both lists appears only once as visited
+    @Transactional
+    public void getSavedCountries_countryInBothLists_returnedOnceAsVisited() {
+        // GIVEN Switzerland in both visited and wishlist
+        Preferences preferences = new Preferences();
+        preferences.setVisitedCountries(List.of("Switzerland"));
+        preferences.setWishlistCountries(List.of("Switzerland", "Japan"));
+        preferencesService.savePreferences(testUser.getId(), preferences);
+
+        // WHEN fetching saved countries
+        List<Map<String, String>> result = preferencesService.getSavedCountries(testUser.getId());
+
+        // THEN Switzerland appears only once as visited
+        assertEquals(2, result.size());
+        assertEquals(1, result.stream()
+            .filter(c -> c.get("countryName").equals("Switzerland"))
+            .count());
+        assertTrue(result.stream().anyMatch(c -> 
+            c.get("countryName").equals("Switzerland") && c.get("status").equals("visited")));
     }
 }
