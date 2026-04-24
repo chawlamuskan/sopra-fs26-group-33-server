@@ -148,6 +148,20 @@ public class TravelBoardService {
         return result;
     }
 
+    public TravelBoard getSingleTravelBoardById(Long boardId, String token) {
+        User user = userRepository.findByToken(token);
+        Long userId = user.getId();
+        
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+        
+        if (!board.getOwner().getId().equals(userId) && !board.getMembers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you must be owner or member");
+        }
+    
+        return board;
+    }
+
     public String getInviteCode(Long boardId) {
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));

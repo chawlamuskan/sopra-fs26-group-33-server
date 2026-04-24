@@ -90,6 +90,18 @@ public class TravelBoardController {
         
     }
 
+    @GetMapping("/travelboards/{boardId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public TravelBoardGetDTO getSingleTravelBoardById(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token){
+        userService.validateToken(token);
+
+        TravelBoard board = travelBoardService.getSingleTravelBoardById(boardId, token);
+
+        return DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board); 
+        
+    }
+
     @GetMapping("/travelboards/{boardId}/inviteCode")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
