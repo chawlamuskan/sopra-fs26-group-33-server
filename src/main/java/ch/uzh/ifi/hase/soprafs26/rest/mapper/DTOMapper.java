@@ -154,6 +154,7 @@ public interface DTOMapper {
 	@Mapping(source = "lat", target = "lat")
 	@Mapping(source = "lng", target = "lng")
 	@Mapping(source = "types", target = "types")
+	@Mapping(source = "user.id", target = "addedByUserId")
 	TravelBoardPlaceGetDTO convertEntityToTravelBoardPlaceGetDTO(TravelBoardPlace travelBoardPlace);
 
 }
