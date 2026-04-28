@@ -124,4 +124,15 @@ public class UserController {
 		userService.updatePassword(id, userPutDTO.getPassword());
 	}
 
+	// DELETE /users/{id} - Delete user account
+	@DeleteMapping("/users/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT) // DELETE /users/{id} -> status code 204 (HttpStatus.NO_CONTENT)
+	public void deleteUser(
+		@PathVariable Long id,
+		@RequestHeader(value = "Authorization", required = false) String token) {
+		
+		userService.validateToken(token);
+		userService.deleteUser(id);
+	}
+
 }
