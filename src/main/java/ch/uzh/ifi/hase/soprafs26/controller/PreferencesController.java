@@ -81,7 +81,11 @@ public class PreferencesController {
         @RequestHeader(value = "Authorization", required = false) String token,
 		@RequestBody PreferencesPostDTO preferencesPostDTO) {
 
-		userService.validateToken(token);
+		User loggedInUser = userService.validateToken(token);
+		if (!loggedInUser.getId().equals(id)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You are not allowed to update other users' preferences.");
+		}
 
 		Preferences preferences = DTOMapper.INSTANCE.convertPreferencesPostDTOtoEntity(preferencesPostDTO);
 
