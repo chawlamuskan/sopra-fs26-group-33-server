@@ -125,7 +125,7 @@ public class SavedPlace implements Serializable {
         this.types = types;
     }
 
-    public User getuser() {
+    public User getUser() {
         return user;
     }
 
