@@ -49,7 +49,7 @@ public class SavedPlace implements Serializable {
     private Set<String> types;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
 
