@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,6 +76,16 @@ public class SavedPlaceController {
             
         }
         return savedPlaceGetDTOs;
+    }
+
+    @DeleteMapping("/users/{userId}/savedplaces/{savedPlaceId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSavedPlace(
+        @PathVariable Long savedPlaceId,
+        @RequestHeader (value = "Authorization", required = false) String token
+    ){
+        userService.validateToken(token);
+        savedPlaceService.deleteSavedPlace(savedPlaceId, token);
     }
     
 }
