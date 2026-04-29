@@ -66,7 +66,7 @@ public class SavedPlaceControllerTest {
 	}
 
     // Helper method to mock a saved place
-    private SavedPlace mockSavedPlace(String externalPlaceId, String name, String address, Double rating, String photoReference, Double lat, Double lng, Set<String> types) {
+    private SavedPlace mockSavedPlace(String externalPlaceId, String name, String address, Double rating, String photoReference, Double lat, Double lng, Set<String> types, User user) {
         SavedPlace savedPlace = new SavedPlace();
         savedPlace.setExternalPlaceId(externalPlaceId);
         savedPlace.setName(name);
@@ -76,6 +76,7 @@ public class SavedPlaceControllerTest {
         savedPlace.setLat(lat);
         savedPlace.setLng(lng);
         savedPlace.setTypes(types);
+        savedPlace.setUser(user);
         return savedPlace;
     }
 
@@ -96,8 +97,9 @@ public class SavedPlaceControllerTest {
         dto.setLat(321.321);
         dto.setLng(123.123);
         dto.setTypes(Set.of("Attraction", "Building"));
+       
 
-        SavedPlace created = mockSavedPlace("9876", "Eiffel Tower", "Rue de Eiffel, 3000 Paris", 4.3, "abcde", 321.321, 123.123, Set.of("Attraction", "Building"));
+        SavedPlace created = mockSavedPlace("9876", "Eiffel Tower", "Rue de Eiffel, 3000 Paris", 4.3, "abcde", 321.321, 123.123, Set.of("Attraction", "Building"), mockUser);
 
         given(savedPlaceService.saveToUser(Mockito.eq(1L), Mockito.any()))
             .willReturn(created);
