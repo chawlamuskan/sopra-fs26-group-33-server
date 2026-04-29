@@ -120,6 +120,33 @@ public class SavedPlaceControllerTest {
     }
 
     @Test
+    public void createSavedPlace_differentUserId_returnsForbidden() throws Exception {
+        User user = mockUser(1L);
+
+        SavedPlacePostDTO dto = new SavedPlacePostDTO();
+        dto.setExternalPlaceId("9876");
+        dto.setName("Eiffel Tower");
+        dto.setAddress("Rue de Eiffel, 3000 Paris");
+        dto.setRating(4.3);
+        dto.setPhotoReference("abcde");
+        dto.setLat(321.321);
+        dto.setLng(123.123);
+        dto.setTypes(Set.of("Attraction", "Building"));
+
+        given(userService.validateToken(Mockito.eq("valid-token"))).willReturn(user);
+
+        // When POST request is made to /users/2/savedplaces from user with Id 1
+        MockHttpServletRequestBuilder postRequest = post("/users/2/savedplaces")
+            .contentType(MediaType.APPLICATION_JSON) 
+            .header("Authorization", "valid-token")
+			.content(asJsonString(dto));
+
+        // Then return 403 FORBIDDEN
+        mockMvc.perform(postRequest)
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     public void createSavedPlace_noToken_returnsUnauthorized() throws Exception {
         SavedPlacePostDTO dto = new SavedPlacePostDTO();
         dto.setExternalPlaceId("9876");
@@ -144,6 +171,8 @@ public class SavedPlaceControllerTest {
         .andExpect(status().isUnauthorized());
     }
 
+
+    // ================ GET /users/{userId}/savedplaces TESTS ================
   
 
     // ================ helper methods ================
