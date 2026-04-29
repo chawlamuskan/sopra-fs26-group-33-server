@@ -12,18 +12,22 @@ import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardPlaceRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 @Service
 public class TravelBoardPlaceService {
 
     private final TravelBoardPlaceRepository travelBoardPlaceRepository;
     private final TravelBoardRepository travelBoardRepository;
+    private final UserRepository userRepository;
 
     public TravelBoardPlaceService(
         @Qualifier ("travelBoardPlaceRepository") TravelBoardPlaceRepository travelBoardPlaceRepository,
-        @Qualifier ("travelBoardRepository") TravelBoardRepository travelBoardRepository) {
+        @Qualifier ("travelBoardRepository") TravelBoardRepository travelBoardRepository,
+        @Qualifier ("userRepository") UserRepository userRepository) {
             this.travelBoardPlaceRepository = travelBoardPlaceRepository;
             this.travelBoardRepository = travelBoardRepository;
+            this.userRepository = userRepository;
             
         }
     
@@ -53,6 +57,25 @@ public class TravelBoardPlaceService {
 
         return travelBoardPlaceRepository.findAllByBoard(board);
     }
+
+    // remove a place from a travel board
+    public void deletePlaceFromBoard(Long travelBoardPlaceId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
+        }
+
+        TravelBoardPlace travelBoardPlace = travelBoardPlaceRepository.findById(travelBoardPlaceId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board place not found"));
+
+        TravelBoard board = travelBoardPlace.getBoard();
+         if (!board.getMembers().contains(user)) {
+          throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not a member of this travel board");
+        }
+        
+        travelBoardPlaceRepository.delete(travelBoardPlace);
+    }
+
 
     // check if a place has already been saved to a travel board
     private void checkIfPlaceAlreadySaved(TravelBoardPlace place, TravelBoard board) {
