@@ -118,6 +118,32 @@ public class SavedPlaceControllerTest {
             .andExpect(jsonPath("$.lng", is(123.123)))
             .andExpect(jsonPath("$.types", hasItems("Attraction", "Building")));
     }
+
+    @Test
+    public void createSavedPlace_noToken_returnsUnauthorized() throws Exception {
+        SavedPlacePostDTO dto = new SavedPlacePostDTO();
+        dto.setExternalPlaceId("9876");
+        dto.setName("Eiffel Tower");
+        dto.setAddress("Rue de Eiffel, 3000 Paris");
+        dto.setRating(4.3);
+        dto.setPhotoReference("abcde");
+        dto.setLat(321.321);
+        dto.setLng(123.123);
+        dto.setTypes(Set.of("Attraction", "Building"));
+
+    given(userService.validateToken(Mockito.isNull()))
+        .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided"));
+
+    // When POST request is made to /users/{userId}/savedplaces from user with Id 1
+    MockHttpServletRequestBuilder postRequest = post("/users/1/savedplaces")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(asJsonString(dto));
+
+    // then return 401 UNAUTHORIZED when no token is provided
+    mockMvc.perform(postRequest)
+        .andExpect(status().isUnauthorized());
+    }
+
   
 
     // ================ helper methods ================
