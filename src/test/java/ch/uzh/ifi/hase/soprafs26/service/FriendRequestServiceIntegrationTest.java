@@ -10,7 +10,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import ch.uzh.ifi.hase.soprafs26.constant.FriendRequestStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
+import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.FriendRequestRepository;
@@ -61,6 +63,10 @@ public class FriendRequestServiceIntegrationTest {
         travelBoardRepository.deleteAll();
         preferencesRepository.deleteAll();
         userRepository.deleteAll();
+        invitationRepository.flush();
+        friendRequestRepository.flush();
+        travelBoardRepository.flush();
+        preferencesRepository.flush();
         userRepository.flush();
 	}
     
@@ -188,6 +194,51 @@ public class FriendRequestServiceIntegrationTest {
         );
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
+
+    //#223
+    @Test
+    public void sendFriendRequest_validInput_storesPendingRequestInDatabase() {
+        // create user: sender
+        User sender = new User();
+        sender.setName("sender");
+        sender.setUsername("sender1234");
+        sender.setPassword("pw");
+        sender.setEmail("sender1234@test.ch");
+        sender.setCreationDate(LocalDate.now());
+        sender.setStatus(UserStatus.ONLINE);
+        sender.setToken("sendertoken1234");
+        userRepository.save(sender);
+        Long senderId = sender.getId();
+
+        // create user: receiver
+        User receiver = new User();
+        receiver.setName("receiver");
+        receiver.setUsername("receiver1234");
+        receiver.setPassword("pw");
+        receiver.setEmail("receiver1234@test.ch");
+        receiver.setCreationDate(LocalDate.now());
+        receiver.setStatus(UserStatus.ONLINE);
+        receiver.setToken("receivertoken1234");
+        userRepository.save(receiver);
+        Long receiverId = receiver.getId();
+
+        //create friendrequest
+        FriendRequest createdRequest = friendRequestService.sendFriendRequest(sender.getToken(), receiver.getId());
+
+        //assert
+        assertNotNull(createdRequest.getId());
+        assertEquals(FriendRequestStatus.PENDING, createdRequest.getStatus());
+        assertEquals(senderId, createdRequest.getSender().getId());
+        assertEquals(receiverId, createdRequest.getReceiver().getId());
+
+        //search for created
+        FriendRequest storedRequest = friendRequestRepository.findById(createdRequest.getId()).orElseThrow();
+
+        //assert
+        assertEquals(FriendRequestStatus.PENDING, storedRequest.getStatus());
+        assertEquals(senderId, storedRequest.getSender().getId());
+        assertEquals(receiverId, storedRequest.getReceiver().getId());
     }
 
 }
