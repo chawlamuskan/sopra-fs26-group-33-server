@@ -23,6 +23,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Test class for the UserResource REST resource.
@@ -59,14 +60,14 @@ public class FriendRequestServiceIntegrationTest {
 	@BeforeEach
 	public void setup() {
         invitationRepository.deleteAll();
-        friendRequestRepository.deleteAll();
-        travelBoardRepository.deleteAll();
-        preferencesRepository.deleteAll();
-        userRepository.deleteAll();
         invitationRepository.flush();
+        friendRequestRepository.deleteAll();
         friendRequestRepository.flush();
+        travelBoardRepository.deleteAll();
         travelBoardRepository.flush();
+        preferencesRepository.deleteAll();
         preferencesRepository.flush();
+        userRepository.deleteAll();
         userRepository.flush();
 	}
     
@@ -241,4 +242,66 @@ public class FriendRequestServiceIntegrationTest {
         assertEquals(receiverId, storedRequest.getReceiver().getId());
     }
 
+    //#402
+    @Test
+    @Transactional
+    public void getFriendList_onlyAcceptedFriends_returnsOnlyAcceptedFriends() {
+        // create user
+        User user = new User();
+        user.setName("user");
+        user.setUsername("user402");
+        user.setPassword("pw");
+        user.setEmail("user402@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("usertoken402");
+        userRepository.save(user);
+
+        // create accepted friend
+        User acceptedFriend = new User();
+        acceptedFriend.setName("acceptedFriend");
+        acceptedFriend.setUsername("accepted402");
+        acceptedFriend.setPassword("pw");
+        acceptedFriend.setEmail("accepted402@test.ch");
+        acceptedFriend.setCreationDate(LocalDate.now());
+        acceptedFriend.setStatus(UserStatus.ONLINE);
+        acceptedFriend.setToken("acceptedtoken402");
+        userRepository.save(acceptedFriend);
+
+        // create pending/not accepted user
+        User pendingUser = new User();
+        pendingUser.setName("pendingUser");
+        pendingUser.setUsername("pending402");
+        pendingUser.setPassword("pw");
+        pendingUser.setEmail("pending402@test.ch");
+        pendingUser.setCreationDate(LocalDate.now());
+        pendingUser.setStatus(UserStatus.ONLINE);
+        pendingUser.setToken("pendingtoken402");
+        userRepository.save(pendingUser);
+
+        // add only acceptedFriend as actual friend
+        user.getFriends().add(acceptedFriend);
+        acceptedFriend.getFriends().add(user);
+        userRepository.save(user);
+        userRepository.save(acceptedFriend);
+
+        // create pending friend request that should not appear in friend list
+        FriendRequest pendingRequest = new FriendRequest();
+        pendingRequest.setSender(pendingUser);
+        pendingRequest.setReceiver(user);
+        pendingRequest.setStatus(FriendRequestStatus.PENDING);
+        friendRequestRepository.save(pendingRequest);
+
+        Long userId = user.getId();
+        Long acceptedFriendId = acceptedFriend.getId();
+        Long pendingUserId = pendingUser.getId();
+
+        // fetch friend list
+        List<User> friends = friendRequestService.getFriends(user.getToken());
+
+        // assert
+        assertTrue(friends.stream().anyMatch(friend -> friend.getId().equals(acceptedFriendId)));
+        assertFalse(friends.stream().anyMatch(friend -> friend.getId().equals(userId)));
+        assertFalse(friends.stream().anyMatch(friend -> friend.getId().equals(pendingUserId)));
+    }
 }
