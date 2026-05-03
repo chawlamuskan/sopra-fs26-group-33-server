@@ -456,4 +456,104 @@ public class FriendRequestServiceIntegrationTest {
         assertFalse(pendingRequests.stream().anyMatch(request -> request.getId().equals(acceptedRequestId)));
         assertFalse(pendingRequests.stream().anyMatch(request -> request.getId().equals(declinedRequestId)));
     }
+
+    //#405
+    @Test
+    @Transactional
+    public void acceptFriendRequest_validPendingRequest_createsFriendship() {
+        // create sender
+        User sender = new User();
+        sender.setName("sender");
+        sender.setUsername("sender405");
+        sender.setPassword("pw");
+        sender.setEmail("sender405@test.ch");
+        sender.setCreationDate(LocalDate.now());
+        sender.setStatus(UserStatus.ONLINE);
+        sender.setToken("sendertoken405");
+        userRepository.save(sender);
+
+        // create receiver
+        User receiver = new User();
+        receiver.setName("receiver");
+        receiver.setUsername("receiver405");
+        receiver.setPassword("pw");
+        receiver.setEmail("receiver405@test.ch");
+        receiver.setCreationDate(LocalDate.now());
+        receiver.setStatus(UserStatus.ONLINE);
+        receiver.setToken("receivertoken405");
+        userRepository.save(receiver);
+
+        // create pending friend request
+        FriendRequest request = new FriendRequest();
+        request.setSender(sender);
+        request.setReceiver(receiver);
+        request.setStatus(FriendRequestStatus.PENDING);
+        request = friendRequestRepository.save(request);
+
+        Long requestId = request.getId();
+        Long senderId = sender.getId();
+        Long receiverId = receiver.getId();
+
+        // accept friend request
+        friendRequestService.acceptFriendRequest(requestId, receiver.getToken());
+
+        // assert
+        FriendRequest updatedRequest = friendRequestRepository.findById(requestId).orElseThrow();
+        User updatedSender = userRepository.findById(senderId).orElseThrow();
+        User updatedReceiver = userRepository.findById(receiverId).orElseThrow();
+
+        assertEquals(FriendRequestStatus.ACCEPTED, updatedRequest.getStatus());
+        assertTrue(updatedSender.getFriends().stream().anyMatch(friend -> friend.getId().equals(receiverId)));
+        assertTrue(updatedReceiver.getFriends().stream().anyMatch(friend -> friend.getId().equals(senderId)));
+    }
+
+    //#406
+    @Test
+    @Transactional
+    public void declineFriendRequest_validPendingRequest_doesNotCreateFriendship() {
+        // create sender
+        User sender = new User();
+        sender.setName("sender");
+        sender.setUsername("sender406");
+        sender.setPassword("pw");
+        sender.setEmail("sender406@test.ch");
+        sender.setCreationDate(LocalDate.now());
+        sender.setStatus(UserStatus.ONLINE);
+        sender.setToken("sendertoken406");
+        userRepository.save(sender);
+
+        // create receiver
+        User receiver = new User();
+        receiver.setName("receiver");
+        receiver.setUsername("receiver406");
+        receiver.setPassword("pw");
+        receiver.setEmail("receiver406@test.ch");
+        receiver.setCreationDate(LocalDate.now());
+        receiver.setStatus(UserStatus.ONLINE);
+        receiver.setToken("receivertoken406");
+        userRepository.save(receiver);
+
+        // create pending friend request
+        FriendRequest request = new FriendRequest();
+        request.setSender(sender);
+        request.setReceiver(receiver);
+        request.setStatus(FriendRequestStatus.PENDING);
+        request = friendRequestRepository.save(request);
+
+        Long requestId = request.getId();
+        Long senderId = sender.getId();
+        Long receiverId = receiver.getId();
+
+        // decline request
+        friendRequestService.declineFriendRequest(requestId, receiver.getToken());
+
+        // assert
+        FriendRequest updatedRequest = friendRequestRepository.findById(requestId).orElseThrow();
+        User updatedSender = userRepository.findById(senderId).orElseThrow();
+        User updatedReceiver = userRepository.findById(receiverId).orElseThrow();
+
+        assertEquals(FriendRequestStatus.DECLINED, updatedRequest.getStatus());
+        assertFalse(updatedSender.getFriends().stream().anyMatch(friend -> friend.getId().equals(receiverId)));
+        assertFalse(updatedReceiver.getFriends().stream().anyMatch(friend -> friend.getId().equals(senderId)));
+    }
 }
