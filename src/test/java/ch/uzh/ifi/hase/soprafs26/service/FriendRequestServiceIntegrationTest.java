@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
@@ -60,23 +61,24 @@ public class FriendRequestServiceIntegrationTest {
         travelBoardRepository.deleteAll();
         preferencesRepository.deleteAll();
         userRepository.deleteAll();
+        userRepository.flush();
 	}
     
 
     //#227
     @Test
     public void sendFriendRequest_duplicatePendingRequest_throwsConflict() {
-        // create user: sender/owner
-        User owner = new User();
-        owner.setName("owner");
-        owner.setUsername("owner123");
-        owner.setPassword("pw");
-        owner.setEmail("owner123@test.ch");
-        owner.setCreationDate(LocalDate.now());
-        owner.setStatus(UserStatus.ONLINE);
-        owner.setToken("ownertoken");
-        owner = userRepository.save(owner);
-        String senderToken = owner.getToken();
+        // create user: sender
+        User sender = new User();
+        sender.setName("sender");
+        sender.setUsername("sender123");
+        sender.setPassword("pw");
+        sender.setEmail("sender123@test.ch");
+        sender.setCreationDate(LocalDate.now());
+        sender.setStatus(UserStatus.ONLINE);
+        sender.setToken("sendertoken");
+        sender = userRepository.save(sender);
+        String senderToken = sender.getToken();
 
         // create user: receiver
         User receiver = new User();
@@ -100,6 +102,92 @@ public class FriendRequestServiceIntegrationTest {
         );
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+    }
+
+    //#226
+    @Test
+    @Transactional
+    public void removeFriend_existingFriendship_updatesFriendListCorrectly() {
+        // create user: sender
+        User sender = new User();
+        sender.setName("sender");
+        sender.setUsername("sender1234");
+        sender.setPassword("pw");
+        sender.setEmail("sender1234@test.ch");
+        sender.setCreationDate(LocalDate.now());
+        sender.setStatus(UserStatus.ONLINE);
+        sender.setToken("sendertoken1234");
+        userRepository.save(sender);
+
+        // create user: receiver
+        User receiver = new User();
+        receiver.setName("receiver");
+        receiver.setUsername("receiver1234");
+        receiver.setPassword("pw");
+        receiver.setEmail("receiver1234@test.ch");
+        receiver.setCreationDate(LocalDate.now());
+        receiver.setStatus(UserStatus.ONLINE);
+        receiver.setToken("receivertoken1234");
+        userRepository.save(receiver);
+
+        //add each other as friends
+        sender.getFriends().add(receiver);
+        receiver.getFriends().add(sender);
+
+        userRepository.save(sender);
+        userRepository.save(receiver);
+
+        String senderToken = sender.getToken();
+        Long senderId = sender.getId();
+        Long receiverId = receiver.getId();
+
+        // remove friend
+        friendRequestService.removeFriend(senderToken, receiverId);
+
+        // assert
+        User updatedSender = userRepository.findById(senderId).orElseThrow();
+        User updatedReceiver = userRepository.findById(receiverId).orElseThrow();
+
+        assertFalse(updatedSender.getFriends().stream().anyMatch(user -> user.getId().equals(receiverId)));
+        assertFalse(updatedReceiver.getFriends().stream().anyMatch(user -> user.getId().equals(senderId)));
+    }
+
+    //#226
+    @Test
+    public void removeFriend_nonFriend_throwsNotFound() {
+        // create user: sender
+        User sender = new User();
+        sender.setName("sender");
+        sender.setUsername("sender1234");
+        sender.setPassword("pw");
+        sender.setEmail("sender1234@test.ch");
+        sender.setCreationDate(LocalDate.now());
+        sender.setStatus(UserStatus.ONLINE);
+        sender.setToken("sendertoken1234");
+        userRepository.save(sender);
+
+        // create user: receiver
+        User receiver = new User();
+        receiver.setName("receiver");
+        receiver.setUsername("receiver1234");
+        receiver.setPassword("pw");
+        receiver.setEmail("receiver1234@test.ch");
+        receiver.setCreationDate(LocalDate.now());
+        receiver.setStatus(UserStatus.ONLINE);
+        receiver.setToken("receivertoken1234");
+        userRepository.save(receiver);
+
+
+        String senderToken = sender.getToken();
+        Long receiverId = receiver.getId();
+
+        //assert
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> friendRequestService.removeFriend(senderToken, receiverId)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
 }

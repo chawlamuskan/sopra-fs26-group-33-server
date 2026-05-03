@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -56,6 +57,24 @@ public class FriendRequestControllerTest {
 
         mockMvc.perform(postRequest)
                 .andExpect(status().isConflict());
+    }
+
+    //#226
+    @Test
+    public void removeFriend_validFriend_returnsNoContent() throws Exception {
+        String token = "ABC123";
+        Long friendId = 2L;
+
+        User user = new User();
+        user.setId(1L);
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+
+        MockHttpServletRequestBuilder deleteRequest = delete("/friends/{friendId}", friendId)
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(deleteRequest)
+                .andExpect(status().isNoContent());
     }
 
 	
