@@ -376,4 +376,84 @@ public class FriendRequestServiceIntegrationTest {
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
         assertEquals(0, friendRequestRepository.findAll().size());
     }
+
+    //#404
+    @Test
+    public void getPendingFriendRequests_returnsOnlyPendingRequests() {
+        // create receiver
+        User receiver = new User();
+        receiver.setName("receiver");
+        receiver.setUsername("receiver404");
+        receiver.setPassword("pw");
+        receiver.setEmail("receiver404@test.ch");
+        receiver.setCreationDate(LocalDate.now());
+        receiver.setStatus(UserStatus.ONLINE);
+        receiver.setToken("receivertoken404");
+        userRepository.save(receiver);
+
+        // create pending sender
+        User pendingSender = new User();
+        pendingSender.setName("pendingSender");
+        pendingSender.setUsername("pendingSender404");
+        pendingSender.setPassword("pw");
+        pendingSender.setEmail("pendingSender404@test.ch");
+        pendingSender.setCreationDate(LocalDate.now());
+        pendingSender.setStatus(UserStatus.ONLINE);
+        pendingSender.setToken("pendingSenderToken404");
+        userRepository.save(pendingSender);
+
+        // create accepted sender
+        User acceptedSender = new User();
+        acceptedSender.setName("acceptedSender");
+        acceptedSender.setUsername("acceptedSender404");
+        acceptedSender.setPassword("pw");
+        acceptedSender.setEmail("acceptedSender404@test.ch");
+        acceptedSender.setCreationDate(LocalDate.now());
+        acceptedSender.setStatus(UserStatus.ONLINE);
+        acceptedSender.setToken("acceptedSenderToken404");
+        userRepository.save(acceptedSender);
+
+        // create declined sender
+        User declinedSender = new User();
+        declinedSender.setName("declinedSender");
+        declinedSender.setUsername("declinedSender404");
+        declinedSender.setPassword("pw");
+        declinedSender.setEmail("declinedSender404@test.ch");
+        declinedSender.setCreationDate(LocalDate.now());
+        declinedSender.setStatus(UserStatus.ONLINE);
+        declinedSender.setToken("declinedSenderToken404");
+        userRepository.save(declinedSender);
+
+        // create pending request
+        FriendRequest pendingRequest = new FriendRequest();
+        pendingRequest.setSender(pendingSender);
+        pendingRequest.setReceiver(receiver);
+        pendingRequest.setStatus(FriendRequestStatus.PENDING);
+        pendingRequest = friendRequestRepository.save(pendingRequest);
+        Long pendingRequestId = pendingRequest.getId();
+
+        // create accepted request
+        FriendRequest acceptedRequest = new FriendRequest();
+        acceptedRequest.setSender(acceptedSender);
+        acceptedRequest.setReceiver(receiver);
+        acceptedRequest.setStatus(FriendRequestStatus.ACCEPTED);
+        acceptedRequest = friendRequestRepository.save(acceptedRequest);
+        Long acceptedRequestId = acceptedRequest.getId();
+
+        // create declined request
+        FriendRequest declinedRequest = new FriendRequest();
+        declinedRequest.setSender(declinedSender);
+        declinedRequest.setReceiver(receiver);
+        declinedRequest.setStatus(FriendRequestStatus.DECLINED);
+        declinedRequest = friendRequestRepository.save(declinedRequest);
+        Long declinedRequestId = declinedRequest.getId();
+
+        // fetch pending requests
+        List<FriendRequest> pendingRequests = friendRequestService.getPendingFriendRequests(receiver.getToken());
+
+        // assert
+        assertTrue(pendingRequests.stream().anyMatch(request -> request.getId().equals(pendingRequestId)));
+        assertFalse(pendingRequests.stream().anyMatch(request -> request.getId().equals(acceptedRequestId)));
+        assertFalse(pendingRequests.stream().anyMatch(request -> request.getId().equals(declinedRequestId)));
+    }
 }
