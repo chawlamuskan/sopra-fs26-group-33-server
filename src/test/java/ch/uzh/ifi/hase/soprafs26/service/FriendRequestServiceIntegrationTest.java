@@ -304,4 +304,76 @@ public class FriendRequestServiceIntegrationTest {
         assertFalse(friends.stream().anyMatch(friend -> friend.getId().equals(userId)));
         assertFalse(friends.stream().anyMatch(friend -> friend.getId().equals(pendingUserId)));
     }
+
+    //#403 friend request to yourself 
+    @Test
+    public void sendFriendRequest_toYourself_throwsBadRequest() {
+        // create user
+        User user = new User();
+        user.setName("user");
+        user.setUsername("user403");
+        user.setPassword("pw");
+        user.setEmail("user403@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("usertoken403");
+        userRepository.save(user);
+
+        String userToken = user.getToken();
+        Long userId = user.getId();
+
+        // assert
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> friendRequestService.sendFriendRequest(userToken, userId)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals(0, friendRequestRepository.findAll().size());
+    }
+
+    //#403 friend request to existing friend 
+    @Test
+    @Transactional
+    public void sendFriendRequest_toExistingFriend_throwsConflict() {
+        // create user
+        User user = new User();
+        user.setName("user");
+        user.setUsername("user403friend");
+        user.setPassword("pw");
+        user.setEmail("user403friend@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken("usertoken403friend");
+        userRepository.save(user);
+
+        // create friend
+        User friend = new User();
+        friend.setName("friend");
+        friend.setUsername("friend403");
+        friend.setPassword("pw");
+        friend.setEmail("friend403@test.ch");
+        friend.setCreationDate(LocalDate.now());
+        friend.setStatus(UserStatus.ONLINE);
+        friend.setToken("friendtoken403");
+        userRepository.save(friend);
+
+        // add each other as friends
+        user.getFriends().add(friend);
+        friend.getFriends().add(user);
+        userRepository.save(user);
+        userRepository.save(friend);
+
+        String userToken = user.getToken();
+        Long friendId = friend.getId();
+
+        // assert
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> friendRequestService.sendFriendRequest(userToken, friendId)
+        );
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals(0, friendRequestRepository.findAll().size());
+    }
 }
