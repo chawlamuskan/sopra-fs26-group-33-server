@@ -72,14 +72,14 @@ public class PreferencesController {
 		return DTOMapper.INSTANCE.convertEntityToPreferencesGetDTO(preferences);
 	}
 
-	// Update User Preferences
+	// Update User Preferences (partial update supporting explicit nulls)
 	@PutMapping("/users/{id}/preferences")
 	@ResponseStatus(HttpStatus.NO_CONTENT) // PUT /users/{id}/preferences -> 204 NO CONTENT based on REST
 	@ResponseBody
 	public void updatePreferences(
 		@PathVariable Long id,
-        @RequestHeader(value = "Authorization", required = false) String token,
-		@RequestBody PreferencesPostDTO preferencesPostDTO) {
+		@RequestHeader(value = "Authorization", required = false) String token,
+		@RequestBody Map<String, Object> updates) {
 
 		User loggedInUser = userService.validateToken(token);
 		if (!loggedInUser.getId().equals(id)) {
@@ -87,9 +87,8 @@ public class PreferencesController {
 				"You are not allowed to update other users' preferences.");
 		}
 
-		Preferences preferences = DTOMapper.INSTANCE.convertPreferencesPostDTOtoEntity(preferencesPostDTO);
-
-		preferencesService.savePreferences(id, preferences);
+		// Delegate to service which will respect explicit nulls when keys are present
+		preferencesService.partialUpdate(id, updates);
 	}
 
 	// Get Saved Countries (UNION of visited & wishlist Countries)
