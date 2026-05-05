@@ -83,6 +83,12 @@ public class PreferencesController {
 
 		User loggedInUser = userService.validateToken(token);
 		if (!loggedInUser.getId().equals(id)) {
+			// Make sure we return 404 when the target user does not exist.
+			// In tests with mocked services, getUserById may return null instead of throwing.
+			User targetUser = userService.getUserById(id);
+			if (targetUser == null) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+			}
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
 				"You are not allowed to update other users' preferences.");
 		}
