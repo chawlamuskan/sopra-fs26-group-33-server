@@ -121,6 +121,14 @@ public class UserController {
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
 		}
+
+		// If an old password is provided, verify it matches the current password
+		if (userPutDTO.getOldPassword() != null) {
+			if (!user.getPassword().equals(userPutDTO.getOldPassword())) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Old password incorrect");
+			}
+		}
+
 		userService.updatePassword(id, userPutDTO.getPassword());
 	}
 
