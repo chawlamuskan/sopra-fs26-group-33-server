@@ -188,6 +188,83 @@ public class TravelBoardPlaceControllerTest {
         .andExpect(status().isUnauthorized());
     }
 
+       @Test // Test that if board does not exist, return 404
+    public void addPlaceToBoard_boardNotFound_returnsNotFound() throws Exception {
+        given(travelBoardPlaceService.getPlacesByBoard(999L))
+            .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+        
+        MockHttpServletRequestBuilder postRequest = get("/travelboards/999/places")
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(postRequest)
+            .andExpect(status().isNotFound());
+
+    }
+
+
+    // ================ GET /travelboards/{boardId}/places TESTS ================
+  
+    @Test // Test getting places for a board returns 200
+    public void getPlacesByBoardId_validInput_returnsOk() throws Exception {
+        String token = "valid-token";
+
+        User mockUser = mockUser(1L);
+
+        TravelBoardPlace mockPlace = mockTravelBoardPlace("9876", "Eiffel Tower", "Rue de Eiffel, 3000 Paris", 4.3, "abcde", 321.321, 123.123, Set.of("Attraction", "Building"), mockUser, mockTravelBoard(1L, mockUser));
+        List<TravelBoardPlace> savedPlaces = new ArrayList<>();
+        savedPlaces.add(mockPlace);
+        
+        Mockito.when(userService.validateToken(token)).thenReturn(mockUser);
+        Mockito.when(travelBoardPlaceService.getPlacesByBoard(1L))
+            .thenReturn(savedPlaces);
+
+
+        MockHttpServletRequestBuilder getRequest = get("/travelboards/1/places")
+            .header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON);
+            
+
+        mockMvc.perform(getRequest)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].externalPlaceId", is("9876")))
+            .andExpect(jsonPath("$[0].name", is("Eiffel Tower")))
+            .andExpect(jsonPath("$[0].address", is("Rue de Eiffel, 3000 Paris")))
+            .andExpect(jsonPath("$[0].rating", is(4.3)))
+            .andExpect(jsonPath("$[0].photoReference", is("abcde")))
+            .andExpect(jsonPath("$[0].lat", is(321.321)))
+            .andExpect(jsonPath("$[0].lng", is(123.123)))
+            .andExpect(jsonPath("$[0].types", hasItems("Attraction", "Building")));
+
+    }
+
+    @Test // Test that if no token is provided, you cannot get saved places
+    public void getPlacesByBoard_noToken_returnsUnauthorized() throws Exception {
+        given(userService.validateToken(Mockito.isNull()))
+            .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided"));
+
+        MockHttpServletRequestBuilder getRequest = get("/travelboards/1/places")
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(getRequest)
+            .andExpect(status().isUnauthorized());
+
+
+    }
+
+
+    @Test // Test that if board does not exist, return 404
+    public void getPlacesByBoard_boardNotFound_returnsNotFound() throws Exception {
+        given(travelBoardPlaceService.getPlacesByBoard(999L))
+            .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+        
+        MockHttpServletRequestBuilder getRequest = get("/travelboards/999/places")
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(getRequest)
+            .andExpect(status().isNotFound());
+
+    }
+
     // ================ helper methods ================
     private String asJsonString(final Object object) {
     try {
