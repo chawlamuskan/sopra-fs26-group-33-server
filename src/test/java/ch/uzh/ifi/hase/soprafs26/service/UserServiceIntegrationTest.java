@@ -14,6 +14,15 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.SavedPlaceRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardPlaceRepository;
+import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
+import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
+import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
+import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
+import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
+import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
+import ch.uzh.ifi.hase.soprafs26.constant.InviteStatus;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,6 +62,17 @@ public class UserServiceIntegrationTest {
 
 	@Autowired
 	private UserService userService;
+
+    @Autowired
+    private PreferencesService preferencesService;
+
+	@Qualifier("savedPlaceRepository")
+	@Autowired
+	private SavedPlaceRepository savedPlaceRepository;
+
+	@Qualifier("travelBoardPlaceRepository")
+	@Autowired
+	private TravelBoardPlaceRepository travelBoardPlaceRepository;
 
 	@BeforeEach
 	public void setup() {
@@ -265,5 +285,68 @@ public class UserServiceIntegrationTest {
 		// THEN check that old token is not accepted by validateToken
 		assertThrows(ResponseStatusException.class, () -> userService.validateToken(token));
 	}
+
+	@Test // --- START TEST: delete user removes associated data ---
+	public void deleteUser_deletesAssociatedData() {
+		// GIVEN a registered user with preferences, a travel board, saved place, travelBoardPlace and invitation
+		User testUser = new User();
+		testUser.setName("toDelete");
+		testUser.setUsername("deleteUser");
+		testUser.setEmail("delete@example.com");
+		testUser.setPassword("Test1234!");
+		userService.createUser(testUser);
+
+		// preferences
+		Preferences prefs = new Preferences();
+		prefs.setBio("bye");
+		prefs.setProfilePicture("pic");
+		// save via service so it is linked to the user
+		preferencesService.savePreferences(testUser.getId(), prefs);
+
+		// travel board owned by user
+		TravelBoard board = new TravelBoard();
+		board.setName("UserBoard");
+		board.setPrivacy(PrivacyLevel.PRIVATE);
+		board.setDateCreated(java.time.LocalDate.now());
+		board.setOwner(testUser);
+		travelBoardRepository.save(board);
+
+		// saved place by user
+		SavedPlace sp = new SavedPlace();
+		sp.setExternalPlaceId("ext1");
+		sp.setName("Place");
+		sp.setAddress("Addr");
+		sp.setUser(testUser);
+		savedPlaceRepository.save(sp);
+
+		// travel board place by user
+		TravelBoardPlace tbp = new TravelBoardPlace();
+		tbp.setExternalPlaceId("extTB");
+		tbp.setName("TBPlace");
+		tbp.setAddress("Addr");
+		tbp.setUser(testUser);
+		tbp.setBoard(board);
+		travelBoardPlaceRepository.save(tbp);
+
+		// invitation sent by user
+		Invitation inv = new Invitation();
+		inv.setBoard(board);
+		inv.setSender(testUser);
+		inv.setStatus(InviteStatus.PENDING);
+		invitationRepository.save(inv);
+
+		Long id = testUser.getId();
+
+		// WHEN deleting the user
+		userService.deleteUser(id);
+
+		// THEN the user's data should be gone
+		assertNull(preferencesRepository.findByUser(testUser));
+		assertTrue(travelBoardRepository.findByOwnerId(id).isEmpty());
+		assertTrue(savedPlaceRepository.findAllByUser(testUser).isEmpty());
+		assertTrue(travelBoardPlaceRepository.findAll().stream().noneMatch(p -> p.getUser() != null && p.getUser().getId().equals(id)));
+		assertTrue(invitationRepository.findAll().stream().noneMatch(i -> (i.getSender() != null && i.getSender().getId().equals(id)) || (i.getReceiver() != null && i.getReceiver().getId().equals(id))));
+	}
+	// --- END TEST: delete user removes associated data ---
 
 }
