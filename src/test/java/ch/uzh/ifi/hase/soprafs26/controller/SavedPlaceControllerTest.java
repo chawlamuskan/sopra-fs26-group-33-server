@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * PreferencesControllerTest
+ * SavedPlaceControllerTest
  * - simulates HTTP requests i.e. GET/POST/DELETE (no actual network calls) to test the SavedPlaceController
  * - mocks the SavedPlaceService (no actual service or database operations are performed)
  * - tests that the controller correctly handles HTTP requests and returns the right responses (status codes and response bodies)
