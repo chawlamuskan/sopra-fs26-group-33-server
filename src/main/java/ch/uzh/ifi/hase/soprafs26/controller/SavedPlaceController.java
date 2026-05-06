@@ -64,8 +64,13 @@ public class SavedPlaceController {
     @ResponseBody
     public List<SavedPlaceGetDTO> getSavedPlacesByUser (
         @PathVariable Long userId,
-        @RequestHeader (value = "Authorization", required = false) String token
-    ) {
+        @RequestHeader (value = "Authorization", required = false) String token) {
+        
+        User loggedInUser = userService.validateToken(token);
+		if (!loggedInUser.getId().equals(userId)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
+				"You are not allowed to get other users' saved places.");
+		}
         userService.validateToken(token);
         List<SavedPlace> savedPlaces = savedPlaceService.getSavedPlacesByUser(userId);
         List<SavedPlaceGetDTO> savedPlaceGetDTOs = new ArrayList<>();
