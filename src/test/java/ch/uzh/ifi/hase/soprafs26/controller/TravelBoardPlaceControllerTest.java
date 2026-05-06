@@ -12,6 +12,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -19,6 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.hasItems;
+
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -264,6 +266,53 @@ public class TravelBoardPlaceControllerTest {
             .andExpect(status().isNotFound());
 
     }
+
+    // ================ DELETE /travelboards/{boardId}/places TESTS ================
+
+    @Test // Test that deleting a place is returning no content
+    public void deletePlaceFromBoard_validInput_returnsNoContent() throws Exception {
+        Long boardId = 1L;
+        Long placeId = 1L;
+
+        User mockUser = mockUser(1L);
+        given(userService.validateToken(Mockito.eq("valid-token"))).willReturn(mockUser);
+        doNothing().when(travelBoardPlaceService).deletePlaceFromBoard(1L, "valid-token");
+
+        MockHttpServletRequestBuilder deleteRequest = delete("/travelboards/{boardId}/places/{placeId}", boardId, placeId)
+            .header("Authorization", "valid-token")
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(deleteRequest)
+            .andExpect(status().isNoContent());
+
+    }
+
+    @Test // Test that if no token is provided, you cannot get saved places
+    public void deletePlaceFromBoard_noToken_returnsUnauthorized() throws Exception {
+        given(userService.validateToken(Mockito.isNull()))
+            .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided"));
+
+        MockHttpServletRequestBuilder deleteRequest = delete("/travelboards/1/places/1")
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(deleteRequest)
+            .andExpect(status().isUnauthorized());
+
+
+    }
+
+    @Test
+    public void deletePlaceFromBoard_placeNotFound_returnsNotFound() throws Exception {
+        willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"))
+            .given(travelBoardPlaceService)
+            .deletePlaceFromBoard(1L, "valid-token");
+
+        mockMvc.perform(delete("/travelboards/1/places/1")
+                .header("Authorization", "valid-token")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
+    }
+
 
     // ================ helper methods ================
     private String asJsonString(final Object object) {

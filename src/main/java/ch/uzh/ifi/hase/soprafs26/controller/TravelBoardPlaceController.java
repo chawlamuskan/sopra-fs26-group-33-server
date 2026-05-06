@@ -72,11 +72,11 @@ public class TravelBoardPlaceController {
     @DeleteMapping("/travelboards/{boardId}/places/{placeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePlaceFromBoard(
-        @PathVariable Long travelBoardPlaceId,
+        @PathVariable Long placeId,
         @RequestHeader (value = "Authorization", required = false) String token
     ){
         userService.validateToken(token);
-        travelBoardPlaceService.deletePlaceFromBoard(travelBoardPlaceId, token);
+        travelBoardPlaceService.deletePlaceFromBoard(placeId, token);
     }
     
     
