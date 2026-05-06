@@ -86,10 +86,16 @@ public class SavedPlaceController {
     @DeleteMapping("/users/{userId}/savedplaces/{savedPlaceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSavedPlace(
+        @PathVariable Long userId,
         @PathVariable Long savedPlaceId,
         @RequestHeader (value = "Authorization", required = false) String token
     ){
-        userService.validateToken(token);
+        User loggedInUser = userService.validateToken(token);
+        if (!loggedInUser.getId().equals(userId)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
+				"You are not allowed to get other users' saved places.");
+		}
+
         savedPlaceService.deleteSavedPlace(savedPlaceId, token);
     }
     

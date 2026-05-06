@@ -8,9 +8,10 @@ import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.hasItems;
@@ -184,7 +185,6 @@ public class SavedPlaceControllerTest {
 
         User mockUser = mockUser(1L);
 
-    
         SavedPlace mockPlace = mockSavedPlace("9876", "Eiffel Tower", "Rue de Eiffel, 3000 Paris", 4.3, "abcde", 321.321, 123.123, Set.of("Attraction", "Building"), mockUser);
         List<SavedPlace> savedPlaces = new ArrayList<>();
         savedPlaces.add(mockPlace);
@@ -214,8 +214,8 @@ public class SavedPlaceControllerTest {
 
     @Test // Test that you can only get your own saved places
     public void getSavedPlacesByUser_differentUserId_returnsForbidden() throws Exception {
-        User user = mockUser(1L);
-        given(userService.validateToken(Mockito.eq("valid-token"))).willReturn(user);
+        User mockUser = mockUser(1L);
+        given(userService.validateToken(Mockito.eq("valid-token"))).willReturn(mockUser);
 
         MockHttpServletRequestBuilder getRequest = get("/users/2/savedplaces")
             .header("Authorization", "valid-token")
@@ -239,6 +239,56 @@ public class SavedPlaceControllerTest {
         mockMvc.perform(getRequest)
             .andExpect(status().isUnauthorized());
 
+
+    }
+
+
+    // ================ DELETE /users/{userId}/savedplaces/{savedPlaceId} TESTS ================
+
+    @Test // Test that deleting a place is returning no content
+    public void deleteSavedPlace_validInput_returnsNoContent() throws Exception {
+        Long savedPlaceId = 1L;
+
+        User mockUser = mockUser(1L);
+        given(userService.validateToken(Mockito.eq("valid-token"))).willReturn(mockUser);
+        doNothing().when(savedPlaceService).deleteSavedPlace(1L, "valid-token");
+
+        MockHttpServletRequestBuilder deleteRequest = delete("/users/1/savedplaces/{savedPlaceId}", savedPlaceId)
+            .header("Authorization", "valid-token")
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(deleteRequest)
+            .andExpect(status().isNoContent());
+
+    }
+
+
+    @Test // Test that you can only delete your own saved places
+    public void deleteSavedPlace_differentUserId_returnsForbidden() throws Exception {
+
+        User mockUser = mockUser(1L);
+        given(userService.validateToken(Mockito.eq("valid-token"))).willReturn(mockUser);
+
+        MockHttpServletRequestBuilder deleteRequest = delete("/users/2/savedplaces/1")
+            .header("Authorization", "valid-token")
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(deleteRequest)
+            .andExpect(status().isForbidden());
+
+    }
+
+
+    @Test // Test that if no token is provided, it is not possible to delete a saved place
+    public void deleteSavedPlace_noToken_returnsUnauthorized() throws Exception {
+        given(userService.validateToken(Mockito.isNull()))
+            .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided"));
+
+        MockHttpServletRequestBuilder deleteRequest = delete("/users/1/savedplaces/1")
+            .contentType(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(deleteRequest)
+            .andExpect(status().isUnauthorized());
 
     }
 
