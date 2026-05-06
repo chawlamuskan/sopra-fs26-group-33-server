@@ -34,7 +34,7 @@ public class SavedPlace implements Serializable {
     @Column(nullable = true)
     private Double rating;
 
-    @Column(nullable = true)
+    @Column(nullable = true, columnDefinition = "TEXT")
     private String photoReference;
 
     @Column(nullable = true)

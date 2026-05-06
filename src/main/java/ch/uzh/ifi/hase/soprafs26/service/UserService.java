@@ -8,7 +8,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
+import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
+import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
+import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardPlaceRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.SavedPlaceRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,9 +33,22 @@ import java.util.UUID;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final TravelBoardRepository travelBoardRepository;
+	private final InvitationRepository invitationRepository;
+	private final TravelBoardPlaceRepository travelBoardPlaceRepository;
+	private final SavedPlaceRepository savedPlaceRepository;
 
-	public UserService(@Qualifier("userRepository") UserRepository userRepository) {
+	public UserService(
+		@Qualifier("userRepository") UserRepository userRepository,
+		TravelBoardRepository travelBoardRepository,
+		InvitationRepository invitationRepository,
+		TravelBoardPlaceRepository travelBoardPlaceRepository,
+		SavedPlaceRepository savedPlaceRepository) {
 		this.userRepository = userRepository;
+		this.travelBoardRepository = travelBoardRepository;
+		this.invitationRepository = invitationRepository;
+		this.travelBoardPlaceRepository = travelBoardPlaceRepository;
+		this.savedPlaceRepository = savedPlaceRepository;
 	}
 
 	public List<User> getUsers() {
@@ -173,6 +194,67 @@ public class UserService {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, 
 				"Registration failed: Email already exists");
 		}
+	}
+
+	// Delete user account and all associated data
+	public void deleteUser(Long userId) {
+		// Find the user
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+		// Delete travel boards owned by this user
+		List<TravelBoard> ownedBoards = travelBoardRepository.findByOwnerId(userId);
+		for (TravelBoard board : ownedBoards) {
+			// First delete all travel board places for this board
+			List<TravelBoardPlace> places = travelBoardPlaceRepository.findAllByBoard(board);
+			for (TravelBoardPlace place : places) {
+				travelBoardPlaceRepository.delete(place);
+			}
+			
+			// Delete all invitations for this board
+			List<Invitation> boardInvitations = invitationRepository.findAll();
+			for (Invitation invitation : boardInvitations) {
+				if (invitation.getBoard() != null && invitation.getBoard().getId().equals(board.getId())) {
+					invitationRepository.delete(invitation);
+				}
+			}
+			
+			// Now delete the board
+			travelBoardRepository.delete(board);
+		}
+
+		// Remove user from member lists of travel boards (and delete if empty after removal)
+		List<TravelBoard> memberBoards = travelBoardRepository.findByMembersId(userId);
+		for (TravelBoard board : memberBoards) {
+			board.getMembers().remove(user);
+			travelBoardRepository.save(board);
+		}
+
+		// Delete saved places created by this user
+		List<SavedPlace> savedPlaces = savedPlaceRepository.findAllByUser(user);
+		for (SavedPlace place : savedPlaces) {
+			savedPlaceRepository.delete(place);
+		}
+
+		// Delete travel board places created by this user
+		List<TravelBoardPlace> userPlaces = travelBoardPlaceRepository.findAll();
+		for (TravelBoardPlace place : userPlaces) {
+			if (place.getUser() != null && place.getUser().getId().equals(userId)) {
+				travelBoardPlaceRepository.delete(place);
+			}
+		}
+
+		// Delete all invitations related to this user (as sender or receiver)
+		List<Invitation> allInvitations = invitationRepository.findAll();
+		for (Invitation invitation : allInvitations) {
+			if ((invitation.getSender() != null && invitation.getSender().getId().equals(userId)) ||
+				(invitation.getReceiver() != null && invitation.getReceiver().getId().equals(userId))) {
+				invitationRepository.delete(invitation);
+			}
+		}
+
+		// Delete the user (Preferences should cascade delete due to CascadeType.ALL)
+		userRepository.delete(user);
 	}
 
 }
