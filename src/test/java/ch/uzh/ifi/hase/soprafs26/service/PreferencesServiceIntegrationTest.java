@@ -12,6 +12,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import ch.uzh.ifi.hase.soprafs26.repository.FriendRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
@@ -55,6 +56,10 @@ public class PreferencesServiceIntegrationTest {
 	@Autowired
 	private TravelBoardRepository travelBoardRepository;
 
+    @Qualifier("friendRequestRepository")
+    @Autowired
+    private FriendRequestRepository friendRequestRepository;
+
     @Autowired
 	private PreferencesService preferencesService;
 
@@ -66,6 +71,7 @@ public class PreferencesServiceIntegrationTest {
 	@BeforeEach
 	public void setup() {
         invitationRepository.deleteAll();
+        friendRequestRepository.deleteAll();
         travelBoardRepository.deleteAll();
         preferencesRepository.deleteAll();
 		userRepository.deleteAll();
@@ -247,6 +253,26 @@ public class PreferencesServiceIntegrationTest {
         assertThrows(ResponseStatusException.class, () ->
             preferencesService.savePreferences(999L, preferences));
     }
+
+    @Test   // --- START TEST: clear profile picture via partialUpdate persists null ---
+    @Transactional
+    public void updatePreferences_clearProfilePicture_persistsNull() {
+        // GIVEN a user with existing profile picture
+        Preferences preferences = new Preferences();
+        preferences.setProfilePicture("data:image/png;base64,oldpic");
+        preferencesService.savePreferences(testUser.getId(), preferences);
+
+        // WHEN updating profilePicture explicitly to null via partialUpdate
+        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+        updates.put("profilePicture", null);
+        preferencesService.partialUpdate(testUser.getId(), updates);
+
+        // THEN the stored preferences should have profilePicture == null
+        Preferences fetched = preferencesRepository.findByUser(testUser);
+        assertNotNull(fetched);
+        assertNull(fetched.getProfilePicture());
+    }
+    // --- END TEST: clear profile picture via partialUpdate persists null ---
 
     // ================ GET SAVED COUNTRIES TESTS ================
     @Test   // test that visited and wishlist countries saved
