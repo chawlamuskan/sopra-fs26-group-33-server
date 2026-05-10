@@ -132,6 +132,7 @@ public interface DTOMapper {
 	@Mapping(source = "lat", target = "lat")
 	@Mapping(source = "lng", target = "lng")
 	@Mapping(source = "types", target = "types")
+	@Mapping(source = "city", target = "city")
 	SavedPlaceGetDTO convertEntityToSavedPlaceGetDTO(SavedPlace savedPlace);
 
 	// ==================== Travel Board Places Mappings ====================
@@ -155,6 +156,7 @@ public interface DTOMapper {
 	@Mapping(source = "lng", target = "lng")
 	@Mapping(source = "types", target = "types")
 	@Mapping(source = "user.id", target = "addedByUserId")
+	@Mapping(source = "city", target = "city")
 	TravelBoardPlaceGetDTO convertEntityToTravelBoardPlaceGetDTO(TravelBoardPlace travelBoardPlace);
 
 }

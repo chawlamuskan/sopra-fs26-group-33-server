@@ -43,6 +43,9 @@ public class SavedPlace implements Serializable {
     @Column(nullable = true)
     private Double lng;
 
+    @Column(nullable = true)
+    private String city;
+
     @ElementCollection
     @CollectionTable(name = "place_types", joinColumns = @JoinColumn(name = "place_id"))
     @Column(name = "type")
@@ -131,6 +134,14 @@ public class SavedPlace implements Serializable {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
 }
