@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
 
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -148,6 +149,20 @@ public class TravelBoardService {
         return result;
     }
 
+    // despoina
+    public List<TravelBoard> getTravelBoardsBySpecificUser(Long userId) {
+        List<TravelBoard> ownerBoards = travelBoardRepository.findByOwnerId(userId);
+        List<TravelBoard> memberBoards = travelBoardRepository.findByMembersId(userId);
+        List<TravelBoard> result = new ArrayList<>();
+        result.addAll(ownerBoards);
+        for (TravelBoard board : memberBoards) {
+            if (!result.contains(board)) {  
+                result.add(board);
+            }
+        }
+        return result;    
+    }
+
     public TravelBoard getSingleTravelBoardById(Long boardId, String token) {
         User user = userRepository.findByToken(token);
         Long userId = user.getId();
@@ -187,5 +202,8 @@ public class TravelBoardService {
         travelBoardRepository.save(board);        
     }
 
+    public List<TravelBoard> getPublicTravelBoards() {
+        return travelBoardRepository.findByPrivacy(PrivacyLevel.PUBLIC);
  
+    }
 }

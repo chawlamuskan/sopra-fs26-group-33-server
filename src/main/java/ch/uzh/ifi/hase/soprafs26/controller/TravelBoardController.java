@@ -118,5 +118,39 @@ public class TravelBoardController {
 
 	}
 
+    @GetMapping("/travelboards/public")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<TravelBoardGetDTO> getPublicTravelBoards(
+        @RequestHeader(value = "Authorization", required = false) String token) {
 
+        userService.validateToken(token);
+        List<TravelBoard> publicBoards = travelBoardService.getPublicTravelBoards();
+
+        List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
+        for (TravelBoard travelBoard : publicBoards) {
+            travelBoardGetDTOs.add(DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(travelBoard));
+        }
+        return travelBoardGetDTOs;
+    }
+
+    @GetMapping("/users/{userId}/travelboards")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<TravelBoardGetDTO> getTravelBoardsByUserId(
+		@PathVariable Long userId,
+		@RequestHeader(value = "Authorization", required = false) String token) {
+
+		userService.validateToken(token);
+
+		List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsBySpecificUser(userId);
+
+		List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
+		for (TravelBoard board : travelBoards) {
+			travelBoardGetDTOs.add(DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board));
+		}
+		return travelBoardGetDTOs;
+	}
 }
+
+
