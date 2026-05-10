@@ -3,48 +3,37 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
-//import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
+import ch.uzh.ifi.hase.soprafs26.entity.ActivityLog;
 import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
-// import ch.uzh.ifi.hase.soprafs26.entity.Place;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
 import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ActivityLogDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesPostDTO;
-//import ch.uzh.ifi.hase.soprafs26.rest.dto.FriendRequestGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlaceGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InvitationGetDTO;
-// import ch.uzh.ifi.hase.soprafs26.rest.dto.PlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlaceGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlacePostDTO;
-
-/**
- * DTOMapper
- * This class is responsible for generating classes that will automatically transform/map the internal representation of an entity 
- * (e.g., the User) to the external/API representation (e.g. UserGetDTO for getting, UserPostDTO for creating) and vice versa.
- * Additional mappers can be defined for new entities.
- * Always created one mapper for getting information (GET) and one mapper for creating information (POST).
- */
+import java.util.List;
 
 @Mapper
 public interface DTOMapper {
 
 	DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
-
 	// ==================== User Mappings ====================
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "username", target = "username")
 	@Mapping(source = "email", target = "email")
-	@Mapping(source = "password", target = "password")					
-	// No creationDate, token or status, they will be set in the Service when creating user
+	@Mapping(source = "password", target = "password")
 	User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
 	@Mapping(source = "id", target = "id")
@@ -55,7 +44,6 @@ public interface DTOMapper {
 	@Mapping(source = "status", target = "status")
 	@Mapping(source = "creationDate", target = "creationDate")
 	UserGetDTO convertEntityToUserGetDTO(User user);
-	// Do not expose data like password or token to client 
 
 	// ==================== TravelBoard Mappings ====================
 	@Mapping(source = "name", target = "name")
@@ -64,7 +52,7 @@ public interface DTOMapper {
 	@Mapping(source = "endDate", target = "endDate")
 	@Mapping(source = "inviteCode", target = "inviteCode")
 	@Mapping(source = "privacy", target = "privacy")
-    TravelBoard convertTravelBoardPostDTOtoEntity(TravelBoardPostDTO travelBoardPostDTO);
+	TravelBoard convertTravelBoardPostDTOtoEntity(TravelBoardPostDTO travelBoardPostDTO);
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "name", target = "name")
@@ -76,7 +64,14 @@ public interface DTOMapper {
 	@Mapping(source = "privacy", target = "privacy")
 	@Mapping(source = "dateCreated", target = "dateCreated")
 	@Mapping(target = "memberIds", ignore = true)
-    TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
+	@Mapping(source = "activityLogs", target = "activityLogs")
+	TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
+
+	// ==================== ActivityLog Mappings ====================
+	@Mapping(target = "userId", expression = "java(log.getUser() != null ? log.getUser().getId() : null)")
+	ActivityLogDTO convertEntityToActivityLogDTO(ActivityLog log);
+
+	List<ActivityLogDTO> convertEntityToActivityLogDTO(List<ActivityLog> logs);
 
 	// ==================== Preferences Mappings ====================
 	@Mapping(source = "bio", target = "bio")
@@ -102,15 +97,7 @@ public interface DTOMapper {
 	@Mapping(source = "status", target = "status")
 	@Mapping(source = "board.name", target = "boardName")
 	@Mapping(source = "sender.username", target = "senderUsername")
-    InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
-
-//	// ==================== Friend Request Mappings ====================
-//	@Mapping(source = "id", target = "id")
-//	@Mapping(source = "sender.id", target = "senderId")
-//	@Mapping(source = "receiver.id", target = "receiverId")
-//	@Mapping(source = "status", target = "status")
-//	@Mapping(source = "sender.username", target = "senderUsername")
-//    FriendRequestGetDTO convertEntityToFriendRequestGetDTO(FriendRequest createdFriendRequest);
+	InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
 
 	// ==================== Saved Places Mappings ====================
 	@Mapping(source = "externalPlaceId", target = "externalPlaceId")
@@ -158,5 +145,4 @@ public interface DTOMapper {
 	@Mapping(source = "user.id", target = "addedByUserId")
 	@Mapping(source = "city", target = "city")
 	TravelBoardPlaceGetDTO convertEntityToTravelBoardPlaceGetDTO(TravelBoardPlace travelBoardPlace);
-
 }

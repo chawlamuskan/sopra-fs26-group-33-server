@@ -93,13 +93,34 @@ public class TravelBoardController {
     @GetMapping("/travelboards/{boardId}")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public TravelBoardGetDTO getSingleTravelBoardById(@PathVariable Long boardId, @RequestHeader(value = "Authorization", required = false) String token){
+    public TravelBoardGetDTO getSingleTravelBoardById(
+        @PathVariable Long boardId,
+        @RequestHeader(value = "Authorization", required = false) String token) {
+
         userService.validateToken(token);
 
-        TravelBoard board = travelBoardService.getSingleTravelBoardById(boardId, token);
+        TravelBoard board =
+            travelBoardService.getSingleTravelBoardById(boardId, token);
 
-        return DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board); 
+        System.out.println("LOG COUNT = " + board.getActivityLogs().size());
+        board.getActivityLogs().forEach(log -> {
+    System.out.println("LOG userId = " + log.getUser().getId());
+});
+
+        TravelBoardGetDTO dto =
+            DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board);
+
+
+        dto.setMemberIds(
+            board.getMembers()
+                .stream()
+                .map(user -> user.getId())
+                .collect(Collectors.toList())
+        );
+        dto.setOwnerId(board.getOwner().getId());
         
+
+        return dto;
     }
 
     @GetMapping("/travelboards/{boardId}/inviteCode")
