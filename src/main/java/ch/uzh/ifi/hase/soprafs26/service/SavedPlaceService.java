@@ -51,6 +51,21 @@ public class SavedPlaceService {
         return savedPlaceRepository.findAllByUser(user);
     }
 
+    // remove a place from saved places
+    public void deleteSavedPlace(Long SavedPlaceId, String token) {
+        User user = userRepository.findByToken(token);
+        SavedPlace savedPlace = savedPlaceRepository.findById(SavedPlaceId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saved place not found"));
+
+        if (!savedPlace.getUser().equals(user)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you can only delete your own saved places");
+        }
+        
+        savedPlaceRepository.delete(savedPlace);
+    }
+
+
+
     private void checkIfPlaceAlreadySaved(SavedPlace savedPlace, User user) {
         boolean alreadySaved = savedPlaceRepository.existsByExternalPlaceIdAndUser(savedPlace.getExternalPlaceId(), user);
         if (alreadySaved) {

@@ -57,6 +57,37 @@ public class PreferencesService {
         
         return preferencesRepository.save(existing);
     }
+
+    /**
+     * Partial update from a map of fields. This method respects explicit nulls
+     * provided in the request payload. If a key is present with a null value,
+     * the corresponding field will be set to null in the stored Preferences.
+     */
+    public Preferences partialUpdate(Long userId, Map<String, Object> updates) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        Preferences existing = preferencesRepository.findByUser(user);
+        if (existing == null) {
+            // create new Preferences entity if none exists
+            Preferences p = new Preferences();
+            p.setUser(user);
+            if (updates.containsKey("bio")) p.setBio((String) updates.get("bio"));
+            if (updates.containsKey("profilePicture")) p.setProfilePicture((String) updates.get("profilePicture"));
+            if (updates.containsKey("visitedCountries")) p.setVisitedCountries((List<String>) updates.get("visitedCountries"));
+            if (updates.containsKey("wishlistCountries")) p.setWishlistCountries((List<String>) updates.get("wishlistCountries"));
+            if (updates.containsKey("friends")) p.setFriends((List<Long>) updates.get("friends"));
+            return preferencesRepository.save(p);
+        }
+
+        if (updates.containsKey("bio")) existing.setBio((String) updates.get("bio"));
+        if (updates.containsKey("profilePicture")) existing.setProfilePicture((String) updates.get("profilePicture"));
+        if (updates.containsKey("visitedCountries")) existing.setVisitedCountries((List<String>) updates.get("visitedCountries"));
+        if (updates.containsKey("wishlistCountries")) existing.setWishlistCountries((List<String>) updates.get("wishlistCountries"));
+        if (updates.containsKey("friends")) existing.setFriends((List<Long>) updates.get("friends"));
+
+        return preferencesRepository.save(existing);
+    }
 	
 	// retrieve User Preferences by userId
     public Preferences getPreferences(Long userId) {

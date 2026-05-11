@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,8 +64,13 @@ public class SavedPlaceController {
     @ResponseBody
     public List<SavedPlaceGetDTO> getSavedPlacesByUser (
         @PathVariable Long userId,
-        @RequestHeader (value = "Authorization", required = false) String token
-    ) {
+        @RequestHeader (value = "Authorization", required = false) String token) {
+        
+        User loggedInUser = userService.validateToken(token);
+		if (!loggedInUser.getId().equals(userId)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
+				"You are not allowed to get other users' saved places.");
+		}
         userService.validateToken(token);
         List<SavedPlace> savedPlaces = savedPlaceService.getSavedPlacesByUser(userId);
         List<SavedPlaceGetDTO> savedPlaceGetDTOs = new ArrayList<>();
@@ -75,6 +81,22 @@ public class SavedPlaceController {
             
         }
         return savedPlaceGetDTOs;
+    }
+
+    @DeleteMapping("/users/{userId}/savedplaces/{savedPlaceId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSavedPlace(
+        @PathVariable Long userId,
+        @PathVariable Long savedPlaceId,
+        @RequestHeader (value = "Authorization", required = false) String token
+    ){
+        User loggedInUser = userService.validateToken(token);
+        if (!loggedInUser.getId().equals(userId)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
+				"You are not allowed to get other users' saved places.");
+		}
+
+        savedPlaceService.deleteSavedPlace(savedPlaceId, token);
     }
     
 }

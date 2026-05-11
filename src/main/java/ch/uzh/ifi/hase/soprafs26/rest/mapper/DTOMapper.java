@@ -4,6 +4,7 @@ import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.ActivityLog;
+import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
 import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
@@ -13,6 +14,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ActivityLogDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PreferencesPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.FriendRequestGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlaceGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InvitationGetDTO;
@@ -97,7 +99,15 @@ public interface DTOMapper {
 	@Mapping(source = "status", target = "status")
 	@Mapping(source = "board.name", target = "boardName")
 	@Mapping(source = "sender.username", target = "senderUsername")
-	InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
+    InvitationGetDTO convertEntityToInvitationGetDTO(Invitation createdInvitation);
+
+	// ==================== Friend Request Mappings ====================
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "sender.id", target = "senderId")
+	@Mapping(source = "receiver.id", target = "receiverId")
+	@Mapping(source = "status", target = "status")
+	@Mapping(source = "sender.username", target = "senderUsername")
+    FriendRequestGetDTO convertEntityToFriendRequestGetDTO(FriendRequest createdFriendRequest);
 
 	// ==================== Saved Places Mappings ====================
 	@Mapping(source = "externalPlaceId", target = "externalPlaceId")

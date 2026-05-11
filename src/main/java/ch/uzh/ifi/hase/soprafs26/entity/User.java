@@ -47,6 +47,9 @@ public class User implements Serializable {
 
 	@Column(nullable = false)
 	private LocalDate creationDate;
+	
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Preferences preferences;
 
 	@ManyToMany
 	@JoinTable(
@@ -54,10 +57,6 @@ public class User implements Serializable {
 	    joinColumns = @JoinColumn(name = "user_id"),
 	    inverseJoinColumns = @JoinColumn(name = "friend_id")
 	)
-	
-	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	private Preferences preferences;
-
 	private List<User> friends = new ArrayList<>();	
 
 	public Long getId() {
