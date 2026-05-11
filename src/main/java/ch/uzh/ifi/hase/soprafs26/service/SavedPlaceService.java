@@ -47,7 +47,20 @@ public class SavedPlaceService {
 
         return savedPlaceRepository.findAllByUser(user);
     }
-    
+
+    // remove a place from saved places
+    public void deleteSavedPlace(Long SavedPlaceId, String token) {
+        User user = userRepository.findByToken(token);
+        SavedPlace savedPlace = savedPlaceRepository.findById(SavedPlaceId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saved place not found"));
+
+        if (!savedPlace.getUser().equals(user)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you can only delete your own saved places");
+        }
+        
+        savedPlaceRepository.delete(savedPlace);
+    }
+
 
 
     // check if a place has already been saved to a user
@@ -58,4 +71,6 @@ public class SavedPlaceService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Place already saved to this user");
         } 
     }
+
+    
 }
