@@ -10,6 +10,8 @@ RUN chmod +x ./gradlew
 COPY build.gradle settings.gradle /app/
 COPY src /app/src
 # Build the server
+ARG GOOGLE_MAPS_API_KEY
+ENV GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
 RUN ./gradlew clean build --no-daemon
 
 # make image smaller by using multi stage build

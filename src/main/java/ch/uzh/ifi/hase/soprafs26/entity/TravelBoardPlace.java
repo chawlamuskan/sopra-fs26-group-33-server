@@ -43,6 +43,9 @@ public class TravelBoardPlace implements Serializable {
     @Column(nullable = true)
     private Double lng;
 
+    @Column(nullable = true)
+    private String city;
+
     @ElementCollection
     @CollectionTable(name = "place_types", joinColumns = @JoinColumn(name = "place_id"))
     @Column(name = "type")
@@ -143,5 +146,12 @@ public class TravelBoardPlace implements Serializable {
     public void setBoard(TravelBoard board) {
         this.board = board;
     }
-    
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;   
+    }
 }
