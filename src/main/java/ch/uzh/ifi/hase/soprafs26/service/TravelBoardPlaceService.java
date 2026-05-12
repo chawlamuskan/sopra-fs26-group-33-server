@@ -12,55 +12,99 @@ import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardPlaceRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 @Service
 public class TravelBoardPlaceService {
 
     private final TravelBoardPlaceRepository travelBoardPlaceRepository;
     private final TravelBoardRepository travelBoardRepository;
+    private final GeocodingService geocodingService;
+    private final ActivityLogService activityLogService;
+    private final UserRepository userRepository;
 
     public TravelBoardPlaceService(
-        @Qualifier ("travelBoardPlaceRepository") TravelBoardPlaceRepository travelBoardPlaceRepository,
-        @Qualifier ("travelBoardRepository") TravelBoardRepository travelBoardRepository) {
+        @Qualifier("travelBoardPlaceRepository") TravelBoardPlaceRepository travelBoardPlaceRepository,
+        @Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository,
+        @Qualifier ("userRepository") UserRepository userRepository,
+        GeocodingService geocodingService,
+        ActivityLogService activityLogService) {
             this.travelBoardPlaceRepository = travelBoardPlaceRepository;
             this.travelBoardRepository = travelBoardRepository;
-            
-        }
-    
-
-    // add a place to a travel board
+            this.geocodingService = geocodingService;
+            this.activityLogService = activityLogService;
+            this.userRepository = userRepository;
+    }
 
     public TravelBoardPlace saveToBoard(Long boardId, TravelBoardPlace newTravelBoardPlace, User user) {
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
 
-        // check if the user is a member of the board
         if (!board.getOwner().getId().equals(user.getId()) && !(board.getMembers().contains(user))) {
-             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Only board members can add places");
-         }
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Only board members can add places");
+        }
+
         checkIfPlaceAlreadySaved(newTravelBoardPlace, board);
 
         newTravelBoardPlace.setBoard(board);
-        newTravelBoardPlace.setUser(user); 
-        
-        return travelBoardPlaceRepository.save(newTravelBoardPlace);
+        newTravelBoardPlace.setUser(user);
+
+        if (newTravelBoardPlace.getAddress() != null && newTravelBoardPlace.getCity() == null) {
+            newTravelBoardPlace.setCity(geocodingService.resolveCityFromAddress(newTravelBoardPlace.getAddress()));
+        }
+
+        TravelBoardPlace saved = travelBoardPlaceRepository.save(newTravelBoardPlace);
+
+        // ← log the action
+        activityLogService.log(board, user, "added " + newTravelBoardPlace.getName());
+
+        return saved;
     }
 
-    // get all saved places of a travel board 
-    public List<TravelBoardPlace> getPlacesByBoard (Long boardId) {
+    public void removeFromBoard(Long boardId, Long placeId, User user) {
         TravelBoard board = travelBoardRepository.findById(boardId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
+
+        TravelBoardPlace place = travelBoardPlaceRepository.findById(placeId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
+
+        travelBoardPlaceRepository.delete(place);
+
+        // ← log the action
+        activityLogService.log(board, user, "removed " + place.getName());
+    }
+
+    public List<TravelBoardPlace> getPlacesByBoard(Long boardId) {
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
 
         return travelBoardPlaceRepository.findAllByBoard(board);
     }
 
+    // remove a place from a travel board
+    public void deletePlaceFromBoard(Long travelBoardPlaceId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
+        }
+
+        TravelBoardPlace travelBoardPlace = travelBoardPlaceRepository.findById(travelBoardPlaceId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board place not found"));
+
+        TravelBoard board = travelBoardPlace.getBoard();
+         if (!board.getMembers().contains(user)) {
+          throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not a member of this travel board");
+        }
+        
+        travelBoardPlaceRepository.delete(travelBoardPlace);
+    }
+
+
     // check if a place has already been saved to a travel board
     private void checkIfPlaceAlreadySaved(TravelBoardPlace place, TravelBoard board) {
         boolean alreadySaved = travelBoardPlaceRepository.existsByExternalPlaceIdAndBoard(place.getExternalPlaceId(), board);
-        
         if (alreadySaved) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Place already saved to this travel board");
-        } 
+        }
     }
-    
 }

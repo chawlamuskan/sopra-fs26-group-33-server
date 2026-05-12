@@ -12,7 +12,6 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
-import ch.uzh.ifi.hase.soprafs26.service.JoinRequestService;
 import ch.uzh.ifi.hase.soprafs26.service.TravelBoardService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
@@ -97,12 +96,18 @@ public class TravelBoardController {
         
         userService.validateToken(token);
         TravelBoard board = travelBoardService.getSingleTravelBoardById(boardId, token);
+        System.out.println("LOG COUNT = " + board.getActivityLogs().size());
+        board.getActivityLogs().forEach(log -> {
+            System.out.println("LOG userId = " + log.getUser().getId());
+        });
         TravelBoardGetDTO dto = DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board);
         dto.setMemberIds(
-            board.getMembers().stream()
+            board.getMembers()
+                .stream()
                 .map(user -> user.getId())
                 .collect(Collectors.toList())
         );
+        dto.setOwnerId(board.getOwner().getId());
         return dto;
     }
 
@@ -117,7 +122,8 @@ public class TravelBoardController {
         TravelBoard board = travelBoardService.getPublicTravelBoardById(boardId);
         TravelBoardGetDTO dto = DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board);
         dto.setMemberIds(
-            board.getMembers().stream()
+            board.getMembers()
+                .stream()
                 .map(user -> user.getId())
                 .collect(Collectors.toList())
         );

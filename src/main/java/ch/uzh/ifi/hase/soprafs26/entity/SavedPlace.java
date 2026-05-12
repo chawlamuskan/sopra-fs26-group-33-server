@@ -43,13 +43,16 @@ public class SavedPlace implements Serializable {
     @Column(nullable = true)
     private Double lng;
 
+    @Column(nullable = true)
+    private String city;
+
     @ElementCollection
     @CollectionTable(name = "place_types", joinColumns = @JoinColumn(name = "place_id"))
     @Column(name = "type")
     private Set<String> types;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
 
@@ -125,12 +128,20 @@ public class SavedPlace implements Serializable {
         this.types = types;
     }
 
-    public User getuser() {
+    public User getUser() {
         return user;
     }
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
 }
