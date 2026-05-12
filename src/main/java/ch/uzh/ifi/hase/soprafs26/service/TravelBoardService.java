@@ -177,6 +177,15 @@ public class TravelBoardService {
         return board;
     }
 
+    public TravelBoard getPublicTravelBoardById(Long boardId) {
+    TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Board not found"));
+    if (board.getPrivacy() == PrivacyLevel.PRIVATE) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This board is private");}
+    return board;
+}
+
     public String getInviteCode(Long boardId) {
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
@@ -204,6 +213,11 @@ public class TravelBoardService {
 
     public List<TravelBoard> getPublicTravelBoards() {
         return travelBoardRepository.findByPrivacy(PrivacyLevel.PUBLIC);
+ 
+    }
+
+    public List<TravelBoard> getFriendsTravelBoards() {
+        return travelBoardRepository.findByPrivacy(PrivacyLevel.FRIENDS);
  
     }
 }
