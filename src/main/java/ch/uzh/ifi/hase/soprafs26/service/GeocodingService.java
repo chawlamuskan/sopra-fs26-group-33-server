@@ -12,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class GeocodingService {
 
-    @Value("${google.maps.api.key}")
+    @Value("${GOOGLE_MAPS_API_KEY}")
     private String apiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();
