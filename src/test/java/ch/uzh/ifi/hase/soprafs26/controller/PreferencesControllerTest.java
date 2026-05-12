@@ -261,6 +261,54 @@ public class PreferencesControllerTest {
 				.andExpect(status().isNoContent());
 	}
 
+	@Test // --- START TEST: update profile picture successfully ---
+	public void updatePreferences_profilePictureUpdate_returnsNoContent() throws Exception {
+		// GIVEN a logged-in user and an update that contains only a profilePicture
+		User user = mockUser(1L);
+		given(userService.validateToken(Mockito.any())).willReturn(user);
+
+		PreferencesPostDTO dto = new PreferencesPostDTO();
+		dto.setProfilePicture("data:image/png;base64,newpic");
+
+		// Expect service to be called and return an updated Preferences entity
+		Preferences updated = new Preferences();
+		updated.setProfilePicture("data:image/png;base64,newpic");
+
+		given(preferencesService.savePreferences(Mockito.eq(1L), Mockito.any()))
+			.willReturn(updated);
+
+		MockHttpServletRequestBuilder putRequest = put("/users/1/preferences")
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", "valid-token")
+			.content(asJsonString(dto));
+
+		// THEN return 204 NO CONTENT
+		mockMvc.perform(putRequest)
+			.andExpect(status().isNoContent());
+	}
+// --- END TEST: update profile picture successfully ---
+
+	@Test // --- START TEST: forbid updating other user's preferences ---
+	public void updatePreferences_differentUser_returnsForbidden() throws Exception {
+		// GIVEN logged-in user with ID 1 trying to update prefs for user with ID 2
+		User user = mockUser(1L);
+		given(userService.validateToken(Mockito.any())).willReturn(user);
+		given(userService.getUserById(2L)).willReturn(new User());
+
+		PreferencesPostDTO dto = new PreferencesPostDTO();
+		dto.setBio("malicious update");
+
+		MockHttpServletRequestBuilder putRequest = put("/users/2/preferences")
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", "valid-token")
+			.content(asJsonString(dto));
+
+		// THEN return 403 FORBIDDEN
+		mockMvc.perform(putRequest)
+			.andExpect(status().isForbidden());
+	}
+// --- END TEST: forbid updating other user's preferences ---
+
 	@Test   // test that updating preferences for non-existent user returns 404
 	public void updatePreferences_nonExistentUser_returnsNotFound() throws Exception {
 		// GIVEN a non-existent user ID

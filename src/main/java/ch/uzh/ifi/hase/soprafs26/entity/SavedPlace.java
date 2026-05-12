@@ -52,7 +52,7 @@ public class SavedPlace implements Serializable {
     private Set<String> types;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
 
@@ -128,7 +128,7 @@ public class SavedPlace implements Serializable {
         this.types = types;
     }
 
-    public User getuser() {
+    public User getUser() {
         return user;
     }
 

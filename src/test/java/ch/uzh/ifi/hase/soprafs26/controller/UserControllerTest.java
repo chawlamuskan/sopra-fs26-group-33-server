@@ -381,6 +381,28 @@ public class UserControllerTest {
 	}
 
 	@Test
+	public void updateUser_wrongOldPassword_returnsForbidden() throws Exception {
+		// GIVEN a user whose current password is "CorrectOld1!"
+		User user = createValidUser();
+		user.setPassword("CorrectOld1!");
+
+		UserPutDTO dto = new UserPutDTO();
+		dto.setPassword("NewPass1!");
+		dto.setOldPassword("WrongOld!");
+
+		given(userService.getUserById(user.getId())).willReturn(user);
+
+		// WHEN performing PUT request with incorrect old password
+		MockHttpServletRequestBuilder putRequest = put("/users/{id}", user.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(asJsonString(dto));
+
+		// THEN return 403 FORBIDDEN and do not call updatePassword
+		mockMvc.perform(putRequest)
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
 	public void updateUser_userNotFound_notFound() throws Exception {
 		// GIVEN a valid user ID and new password
 		UserPutDTO dto = new UserPutDTO();
