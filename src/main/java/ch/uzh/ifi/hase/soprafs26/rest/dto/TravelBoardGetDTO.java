@@ -26,6 +26,8 @@ public class TravelBoardGetDTO {
     private PrivacyLevel privacy;
     
     private LocalDate dateCreated;
+
+    private List<ActivityLogDTO> activityLogs;
     
 
 
@@ -108,4 +110,7 @@ public class TravelBoardGetDTO {
     public void setDateCreated(LocalDate dateCreated) {
         this.dateCreated = dateCreated;
     }
+
+    public List<ActivityLogDTO> getActivityLogs() { return activityLogs; }
+    public void setActivityLogs(List<ActivityLogDTO> activityLogs) { this.activityLogs = activityLogs; }
 }

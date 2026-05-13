@@ -47,7 +47,11 @@ public class TravelBoard implements Serializable {
     @ManyToMany
 	private List<User> members = new ArrayList<>();
 
+	@OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+	@OrderBy("id DESC")
+	private List<ActivityLog> activityLogs = new ArrayList<>();
 
+	public List<ActivityLog> getActivityLogs() { return activityLogs; }
 
 	public Long getId() {
 		return id;
