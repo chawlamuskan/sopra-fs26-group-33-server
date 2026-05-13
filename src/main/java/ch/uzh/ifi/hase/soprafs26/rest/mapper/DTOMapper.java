@@ -118,6 +118,7 @@ public interface DTOMapper {
 	@Mapping(source = "lat", target = "lat")
 	@Mapping(source = "lng", target = "lng")
 	@Mapping(source = "types", target = "types")
+	@Mapping(source = "city", target = "city")
 	SavedPlace convertSavedPlacePostDTOToEntity(SavedPlacePostDTO savedPlacePostDTO);
 
 	@Mapping(source = "id", target = "id")
