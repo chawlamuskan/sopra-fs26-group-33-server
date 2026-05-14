@@ -26,6 +26,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
 import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
 import ch.uzh.ifi.hase.soprafs26.constant.InviteStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.FriendRequestStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -295,6 +296,7 @@ public class UserServiceIntegrationTest {
 	}
 
 	@Test // --- START TEST: delete user removes associated data ---
+	@Transactional
 	public void deleteUser_deletesAssociatedData() {
 		// GIVEN a registered user with preferences, a travel board, saved place, travelBoardPlace, invitation, friend requests and friendships
 		User testUser = new User();
@@ -389,8 +391,6 @@ public class UserServiceIntegrationTest {
 		// User should be removed from other users' friends lists
 		User updatedFriendUser = userRepository.findById(friendUser.getId()).orElse(null);
 		assertNotNull(updatedFriendUser);
-		// force Hibernate to initialize the lazy collection within the active session
-		int friendCount = updatedFriendUser.getFriends().size();
 		assertTrue(updatedFriendUser.getFriends().stream().noneMatch(f -> f.getId().equals(id)));
 	}
 	// --- END TEST: delete user removes associated data ---
