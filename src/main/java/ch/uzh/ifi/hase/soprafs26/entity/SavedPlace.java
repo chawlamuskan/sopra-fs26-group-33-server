@@ -47,7 +47,7 @@ public class SavedPlace implements Serializable {
     private String city;
 
     @ElementCollection
-    @CollectionTable(name = "place_types", joinColumns = @JoinColumn(name = "place_id"))
+    @CollectionTable(name = "saved_place_types", joinColumns = @JoinColumn(name = "place_id"))
     @Column(name = "type")
     private Set<String> types;
 

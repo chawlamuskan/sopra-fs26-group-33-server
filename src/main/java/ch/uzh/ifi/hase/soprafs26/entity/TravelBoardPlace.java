@@ -47,7 +47,7 @@ public class TravelBoardPlace implements Serializable {
     private String city;
 
     @ElementCollection
-    @CollectionTable(name = "place_types", joinColumns = @JoinColumn(name = "place_id"))
+    @CollectionTable(name = "travel_board_place_types", joinColumns = @JoinColumn(name = "place_id"))
     @Column(name = "type")
     private Set<String> types;
 
