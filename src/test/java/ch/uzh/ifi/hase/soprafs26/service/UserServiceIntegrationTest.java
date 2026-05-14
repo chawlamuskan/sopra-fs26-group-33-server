@@ -368,8 +368,11 @@ public class UserServiceIntegrationTest {
 		friendRequestRepository.save(fr2);
 
 		// Add testUser to friendUser's friends list
-		friendUser.getFriends().add(testUser);
-		userRepository.save(friendUser);
+		// Re-fetch both users to get managed entities within this transaction
+		User managedTestUser = userRepository.findById(testUser.getId()).orElseThrow();
+		User managedFriendUser = userRepository.findById(friendUser.getId()).orElseThrow();
+		managedFriendUser.getFriends().add(managedTestUser);
+		userRepository.save(managedFriendUser);
 
 		Long id = testUser.getId();
 
@@ -389,7 +392,7 @@ public class UserServiceIntegrationTest {
 			(fr.getReceiver() != null && fr.getReceiver().getId().equals(id))));
 		
 		// User should be removed from other users' friends lists
-		User updatedFriendUser = userRepository.findById(friendUser.getId()).orElse(null);
+		User updatedFriendUser = userRepository.findById(managedFriendUser.getId()).orElse(null);
 		assertNotNull(updatedFriendUser);
 		assertTrue(updatedFriendUser.getFriends().stream().noneMatch(f -> f.getId().equals(id)));
 	}
