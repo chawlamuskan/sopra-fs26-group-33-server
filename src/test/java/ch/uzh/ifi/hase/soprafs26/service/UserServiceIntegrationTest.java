@@ -389,6 +389,8 @@ public class UserServiceIntegrationTest {
 		// User should be removed from other users' friends lists
 		User updatedFriendUser = userRepository.findById(friendUser.getId()).orElse(null);
 		assertNotNull(updatedFriendUser);
+		// force Hibernate to initialize the lazy collection within the active session
+		int friendCount = updatedFriendUser.getFriends().size();
 		assertTrue(updatedFriendUser.getFriends().stream().noneMatch(f -> f.getId().equals(id)));
 	}
 	// --- END TEST: delete user removes associated data ---
