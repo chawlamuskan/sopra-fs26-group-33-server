@@ -16,13 +16,16 @@ import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.SavedPlaceRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardPlaceRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.FriendRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
 import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
+import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
 import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
 import ch.uzh.ifi.hase.soprafs26.constant.InviteStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.FriendRequestStatus;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -74,11 +77,16 @@ public class UserServiceIntegrationTest {
 	@Autowired
 	private TravelBoardPlaceRepository travelBoardPlaceRepository;
 
+	@Qualifier("friendRequestRepository")
+	@Autowired
+	private FriendRequestRepository friendRequestRepository;
+
 	@BeforeEach
 	public void setup() {
 		invitationRepository.deleteAll();
 		travelBoardRepository.deleteAll();
 		preferencesRepository.deleteAll();
+		friendRequestRepository.deleteAll();
 		userRepository.deleteAll();
 	}
 	
@@ -288,13 +296,21 @@ public class UserServiceIntegrationTest {
 
 	@Test // --- START TEST: delete user removes associated data ---
 	public void deleteUser_deletesAssociatedData() {
-		// GIVEN a registered user with preferences, a travel board, saved place, travelBoardPlace and invitation
+		// GIVEN a registered user with preferences, a travel board, saved place, travelBoardPlace, invitation, friend requests and friendships
 		User testUser = new User();
 		testUser.setName("toDelete");
 		testUser.setUsername("deleteUser");
 		testUser.setEmail("delete@example.com");
 		testUser.setPassword("Test1234!");
 		userService.createUser(testUser);
+
+		// Create a friend user
+		User friendUser = new User();
+		friendUser.setName("friend");
+		friendUser.setUsername("friendUser");
+		friendUser.setEmail("friend@example.com");
+		friendUser.setPassword("Test1234!");
+		userService.createUser(friendUser);
 
 		// preferences
 		Preferences prefs = new Preferences();
@@ -335,6 +351,24 @@ public class UserServiceIntegrationTest {
 		inv.setStatus(InviteStatus.PENDING);
 		invitationRepository.save(inv);
 
+		// friend request sent by user
+		FriendRequest fr1 = new FriendRequest();
+		fr1.setSender(testUser);
+		fr1.setReceiver(friendUser);
+		fr1.setStatus(FriendRequestStatus.PENDING);
+		friendRequestRepository.save(fr1);
+
+		// friend request received by user
+		FriendRequest fr2 = new FriendRequest();
+		fr2.setSender(friendUser);
+		fr2.setReceiver(testUser);
+		fr2.setStatus(FriendRequestStatus.PENDING);
+		friendRequestRepository.save(fr2);
+
+		// Add testUser to friendUser's friends list
+		friendUser.getFriends().add(testUser);
+		userRepository.save(friendUser);
+
 		Long id = testUser.getId();
 
 		// WHEN deleting the user
@@ -346,6 +380,16 @@ public class UserServiceIntegrationTest {
 		assertTrue(savedPlaceRepository.findAllByUser(testUser).isEmpty());
 		assertTrue(travelBoardPlaceRepository.findAll().stream().noneMatch(p -> p.getUser() != null && p.getUser().getId().equals(id)));
 		assertTrue(invitationRepository.findAll().stream().noneMatch(i -> (i.getSender() != null && i.getSender().getId().equals(id)) || (i.getReceiver() != null && i.getReceiver().getId().equals(id))));
+		
+		// Friend requests should be deleted
+		assertTrue(friendRequestRepository.findAll().stream().noneMatch(fr -> 
+			(fr.getSender() != null && fr.getSender().getId().equals(id)) || 
+			(fr.getReceiver() != null && fr.getReceiver().getId().equals(id))));
+		
+		// User should be removed from other users' friends lists
+		User updatedFriendUser = userRepository.findById(friendUser.getId()).orElse(null);
+		assertNotNull(updatedFriendUser);
+		assertTrue(updatedFriendUser.getFriends().stream().noneMatch(f -> f.getId().equals(id)));
 	}
 	// --- END TEST: delete user removes associated data ---
 
