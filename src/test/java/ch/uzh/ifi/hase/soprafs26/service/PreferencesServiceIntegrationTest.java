@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
@@ -84,6 +86,8 @@ public class PreferencesServiceIntegrationTest {
         testUser.setPassword("Test1234!");
         userService.createUser(testUser);
 	}
+
+     @MockitoBean GeocodingService geocodingService;
 	
 	// ================ SAVE PREFERENCES TESTS ================
     @Test	// test that preferences can be created successfully with valid input

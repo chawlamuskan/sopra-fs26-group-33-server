@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
@@ -63,6 +64,8 @@ public class TravelboardServiceIntegrationTest {
         preferencesRepository.deleteAll();
         userRepository.deleteAll();
 	}
+
+    @MockitoBean GeocodingService geocodingService;
     
     //#135
     @Test
