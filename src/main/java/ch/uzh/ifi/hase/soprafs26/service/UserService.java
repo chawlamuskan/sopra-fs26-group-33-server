@@ -12,7 +12,9 @@ import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
+import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardPlaceRepository;
@@ -35,6 +37,7 @@ import java.util.UUID;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final PreferencesRepository preferencesRepository;
 	private final TravelBoardRepository travelBoardRepository;
 	private final InvitationRepository invitationRepository;
 	private final TravelBoardPlaceRepository travelBoardPlaceRepository;
@@ -43,12 +46,14 @@ public class UserService {
 
 	public UserService(
 		@Qualifier("userRepository") UserRepository userRepository,
+		@Qualifier("preferencesRepository") PreferencesRepository preferencesRepository,
 		TravelBoardRepository travelBoardRepository,
 		InvitationRepository invitationRepository,
 		TravelBoardPlaceRepository travelBoardPlaceRepository,
 		SavedPlaceRepository savedPlaceRepository,
 		FriendRequestRepository friendRequestRepository) {
 		this.userRepository = userRepository;
+		this.preferencesRepository = preferencesRepository;
 		this.travelBoardRepository = travelBoardRepository;
 		this.invitationRepository = invitationRepository;
 		this.travelBoardPlaceRepository = travelBoardPlaceRepository;
@@ -241,6 +246,12 @@ public class UserService {
 			savedPlaceRepository.delete(place);
 		}
 
+		// Delete preferences explicitly before removing the user
+		Preferences preferences = preferencesRepository.findByUser(user);
+		if (preferences != null) {
+			preferencesRepository.delete(preferences);
+		}
+
 		// Delete travel board places created by this user
 		List<TravelBoardPlace> userPlaces = travelBoardPlaceRepository.findAll();
 		for (TravelBoardPlace place : userPlaces) {
@@ -276,6 +287,9 @@ public class UserService {
 					userRepository.save(other);
 				}
 			}
+		}
+		if (user.getFriends() != null) {
+			user.getFriends().clear();
 		}
 
 		// Delete the user (Preferences should cascade delete due to CascadeType.ALL)

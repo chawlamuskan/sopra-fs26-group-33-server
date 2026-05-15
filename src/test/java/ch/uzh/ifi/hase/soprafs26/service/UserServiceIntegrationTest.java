@@ -372,6 +372,8 @@ public class UserServiceIntegrationTest {
 		User managedTestUser = userRepository.findById(testUser.getId()).orElseThrow();
 		User managedFriendUser = userRepository.findById(friendUser.getId()).orElseThrow();
 		managedFriendUser.getFriends().add(managedTestUser);
+		managedTestUser.getFriends().add(managedFriendUser);
+		userRepository.save(managedTestUser);
 		userRepository.save(managedFriendUser);
 
 		Long id = testUser.getId();
