@@ -17,6 +17,9 @@ import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -41,6 +44,8 @@ public class TravelBoardServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ActivityLogService activityLogService;
 	@InjectMocks
 	private TravelBoardService travelBoardService;
 
@@ -58,6 +63,10 @@ public class TravelBoardServiceTest {
 
 		Mockito.when(travelBoardRepository.save(Mockito.any()))
 				.thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(userRepository.save(Mockito.any()))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+
+        doNothing().when(activityLogService).log(any(), any(), anyString());
 	}
 
 	// ================ TESTS CREATE TRAVEL BOARD ================

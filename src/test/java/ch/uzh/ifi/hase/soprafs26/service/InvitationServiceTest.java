@@ -20,6 +20,9 @@ import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,6 +50,9 @@ public class InvitationServiceTest {
     @Mock
     private TravelBoardRepository travelBoardRepository;
 
+    @Mock
+    private ActivityLogService activityLogService;
+
 	@InjectMocks
 	private InvitationService invitationService;
 
@@ -64,6 +70,10 @@ public class InvitationServiceTest {
 
 		Mockito.when(invitationRepository.save(Mockito.any()))
 				.thenAnswer(invocation -> invocation.getArgument(0));
+		Mockito.when(travelBoardRepository.save(Mockito.any()))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+
+        doNothing().when(activityLogService).log(any(), any(), anyString());
 	}
 
 	// ================ TESTS CREATE INVITATION ================
