@@ -36,7 +36,7 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-       tags: ${{secrets.dockerhub_username}}/${{secrets.dockerhub_repo_name}}:latest
+        tags: ${{secrets.dockerhub_username}}/${{secrets.dockerhub_repo_name}}:latest
         platforms: linux/amd64
         cache-from: type=registry,ref=${{secrets.dockerhub_username}}/${{secrets.dockerhub_repo_name}}:cache
         cache-to: type=inline,mode=max

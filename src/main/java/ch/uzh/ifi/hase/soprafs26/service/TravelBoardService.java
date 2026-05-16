@@ -203,7 +203,6 @@ public class TravelBoardService {
         board.getMembers().add(user);
         travelBoardRepository.save(board);
 
-        // ← log joining
         activityLogService.log(board, user, "joined the board");
     }
 
