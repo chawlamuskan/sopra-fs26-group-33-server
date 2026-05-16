@@ -59,6 +59,9 @@ public class TravelBoard implements Serializable {
     @ManyToMany
 	private List<User> members = new ArrayList<>();
 
+	@OneToMany(mappedBy = "board", cascade = CascadeType.REMOVE, orphanRemoval = true)
+	private List<Invitation> invitations = new ArrayList<>();
+
 	@OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 	@OrderBy("id DESC")
 	private List<ActivityLog> activityLogs = new ArrayList<>();
@@ -156,6 +159,13 @@ public class TravelBoard implements Serializable {
 
 	public Double getLngMax() { return lngMax; }
 	public void setLngMax(Double lngMax) { this.lngMax = lngMax; }
+	public List<Invitation> getInvitations() {
+		return invitations;
+	}
+
+	public void setInvitations(List<Invitation> invitations) {
+		this.invitations = invitations;
+	}
 
 
 }
