@@ -25,15 +25,15 @@ public class TravelBoardService {
 
     private final TravelBoardRepository travelBoardRepository;
     private final UserRepository userRepository;
-    private final ActivityLogService activityLogService; // ← add
+    private final ActivityLogService activityLogService; 
 
     public TravelBoardService(
         @Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository,
         UserRepository userRepository,
-        ActivityLogService activityLogService) { // ← add
+        ActivityLogService activityLogService) { 
         this.travelBoardRepository = travelBoardRepository;
         this.userRepository = userRepository;
-        this.activityLogService = activityLogService; // ← add
+        this.activityLogService = activityLogService; 
     }
 
     public List<TravelBoard> getTravelBoards() {
