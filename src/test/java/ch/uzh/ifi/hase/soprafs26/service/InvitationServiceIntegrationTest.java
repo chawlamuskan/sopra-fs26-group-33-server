@@ -23,6 +23,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Test class for the UserResource REST resource.
@@ -134,6 +135,45 @@ public class InvitationServiceIntegrationTest {
         );
 
         assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+    }
+
+    //#262
+    @Test
+    public void getPendingInvitations_returnsOnlyPendingInvitations() {
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User receiver = createTestUser("receiver", "receiver123", "receivertoken123");
+        User otherReceiver = createTestUser("otherReceiver", "otherReceiver123", "othertoken123");
+    
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC);
+    
+        Invitation pendingInvitation = createTestInvitation(board, owner, receiver, InviteStatus.PENDING);
+        Invitation acceptedInvitation = createTestInvitation(board, owner, receiver, InviteStatus.ACCEPTED);
+        Invitation declinedInvitation = createTestInvitation(board, owner, receiver, InviteStatus.DECLINED);
+        Invitation otherUserInvitation = createTestInvitation(board, owner, otherReceiver, InviteStatus.PENDING);
+    
+        List<Invitation> pendingInvitations = invitationService.getPendingInvitations(receiver.getToken());
+    
+        assertTrue(pendingInvitations.stream().anyMatch(invitation -> invitation.getId().equals(pendingInvitation.getId())));
+        assertFalse(pendingInvitations.stream().anyMatch(invitation -> invitation.getId().equals(acceptedInvitation.getId())));
+        assertFalse(pendingInvitations.stream().anyMatch(invitation -> invitation.getId().equals(declinedInvitation.getId())));
+        assertFalse(pendingInvitations.stream().anyMatch(invitation -> invitation.getId().equals(otherUserInvitation.getId())));
+    }
+
+    //#263
+    @Test
+    public void createInvitation_duplicatePendingInvitation_throwsConflict() {
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User receiver = createTestUser("receiver", "receiver123", "receivertoken123");
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC);
+
+        invitationService.createInvitation(board.getId(), owner.getToken(), receiver.getId());
+
+        ResponseStatusException exception = assertThrows(
+            ResponseStatusException.class,
+            () -> invitationService.createInvitation(board.getId(), owner.getToken(), receiver.getId())
+        );
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
     }
 
     private User createTestUser(String name, String username, String token) {
