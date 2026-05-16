@@ -22,6 +22,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Test class for the UserResource REST resource.
@@ -239,6 +240,19 @@ public class TravelboardServiceIntegrationTest {
                 .anyMatch(b -> b.getId().equals(board.getId()))); // true if any board in that list has the expected ID
     }
 
+    //#154
+    @Test
+    public void joinTravelBoard_invalidInviteCode_throwsNotFound() {
+        User user = createTestUser("user", "user123", "usertoken123");
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> travelBoardService.joinTravelBoardByInviteCode(user.getToken(), "INVALID123")
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
+
     //#265
     @Test
     public void leaveTravelBoard_validMember_removesOnlyThatUsersMembership() {
@@ -264,6 +278,41 @@ public class TravelboardServiceIntegrationTest {
                 .stream()
                 .anyMatch(b -> b.getId().equals(boardId)));
     }
+
+    //#115
+    @Test
+    public void getTravelBoardsByUser_returnsOwnedAndJoinedBoards() {
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User member = createTestUser("member", "member123", "membertoken123");
+        User otherUser = createTestUser("otherUser", "otherUser123", "othertoken123");
+    
+        TravelBoard ownedBoard = createTestBoard("Owned Board", member, "CODE123", PrivacyLevel.PUBLIC);
+        TravelBoard joinedBoard = createTestBoard("Joined Board", owner, "CODE456", PrivacyLevel.PRIVATE);
+        TravelBoard unrelatedBoard = createTestBoard("Unrelated Board", otherUser, "CODE789", PrivacyLevel.PUBLIC);
+    
+        joinedBoard.getMembers().add(member);
+        travelBoardRepository.save(joinedBoard);
+    
+        List<TravelBoard> boards = travelBoardService.getTravelBoardsByUser(member.getToken());
+    
+        assertTrue(boards.stream().anyMatch(board -> board.getId().equals(ownedBoard.getId())));
+        assertTrue(boards.stream().anyMatch(board -> board.getId().equals(joinedBoard.getId())));
+        assertFalse(boards.stream().anyMatch(board -> board.getId().equals(unrelatedBoard.getId())));
+    }
+
+    //#435
+    @Test
+    public void getSingleTravelBoardById_owner_returnsBoard() {
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC);
+
+        TravelBoard foundBoard = travelBoardService.getSingleTravelBoardById(board.getId(), owner.getToken());
+
+        assertEquals(board.getId(), foundBoard.getId());
+        assertEquals("Test Board", foundBoard.getName());
+        assertEquals(owner.getId(), foundBoard.getOwner().getId());
+    }
+
 
     private User createTestUser(String name, String username, String token) {
         User user = new User();
