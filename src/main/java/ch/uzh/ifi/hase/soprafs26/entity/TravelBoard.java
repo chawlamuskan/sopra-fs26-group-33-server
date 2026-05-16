@@ -43,6 +43,18 @@ public class TravelBoard implements Serializable {
 
 	@Column(nullable = false)
 	private LocalDate dateCreated;
+	
+	@Column(nullable = true)
+	private Double latMin;
+
+	@Column(nullable = true)
+	private Double latMax;
+
+	@Column(nullable = true)
+	private Double lngMin;
+
+	@Column(nullable = true)
+	private Double lngMax;
     
     @ManyToMany
 	private List<User> members = new ArrayList<>();
@@ -136,6 +148,17 @@ public class TravelBoard implements Serializable {
 		this.members = members;
 	}
 
+	public Double getLatMin() { return latMin; }
+	public void setLatMin(Double latMin) { this.latMin = latMin; }
+
+	public Double getLatMax() { return latMax; }
+	public void setLatMax(Double latMax) { this.latMax = latMax; }
+
+	public Double getLngMin() { return lngMin; }
+	public void setLngMin(Double lngMin) { this.lngMin = lngMin; }
+
+	public Double getLngMax() { return lngMax; }
+	public void setLngMax(Double lngMax) { this.lngMax = lngMax; }
 	public List<Invitation> getInvitations() {
 		return invitations;
 	}

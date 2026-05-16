@@ -61,18 +61,6 @@ public class TravelBoardPlaceService {
         return saved;
     }
 
-    public void removeFromBoard(Long boardId, Long placeId, User user) {
-        TravelBoard board = travelBoardRepository.findById(boardId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
-
-        TravelBoardPlace place = travelBoardPlaceRepository.findById(placeId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
-
-        travelBoardPlaceRepository.delete(place);
-
-        // ← log the action
-        activityLogService.log(board, user, "removed " + place.getName());
-    }
 
     public List<TravelBoardPlace> getPlacesByBoard(Long boardId) {
         TravelBoard board = travelBoardRepository.findById(boardId)
@@ -92,11 +80,14 @@ public class TravelBoardPlaceService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board place not found"));
 
         TravelBoard board = travelBoardPlace.getBoard();
-         if (!board.getMembers().contains(user)) {
-          throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not a member of this travel board");
+        if (!board.getOwner().getId().equals(user.getId()) && !board.getMembers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not a member of this travel board");
         }
         
+        String placeName = travelBoardPlace.getName();
         travelBoardPlaceRepository.delete(travelBoardPlace);
+        activityLogService.log(board, user, "removed " + placeName);
+        
     }
 
 

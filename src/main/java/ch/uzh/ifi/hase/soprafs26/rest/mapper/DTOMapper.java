@@ -54,6 +54,10 @@ public interface DTOMapper {
 	@Mapping(source = "endDate", target = "endDate")
 	@Mapping(source = "inviteCode", target = "inviteCode")
 	@Mapping(source = "privacy", target = "privacy")
+	@Mapping(source = "latMin", target = "latMin")
+	@Mapping(source = "latMax", target = "latMax")
+	@Mapping(source = "lngMin", target = "lngMin")
+	@Mapping(source = "lngMax", target = "lngMax")
 	TravelBoard convertTravelBoardPostDTOtoEntity(TravelBoardPostDTO travelBoardPostDTO);
 
 	@Mapping(source = "id", target = "id")
@@ -65,6 +69,10 @@ public interface DTOMapper {
 	@Mapping(source = "inviteCode", target = "inviteCode")
 	@Mapping(source = "privacy", target = "privacy")
 	@Mapping(source = "dateCreated", target = "dateCreated")
+	@Mapping(source = "latMin", target = "latMin")
+	@Mapping(source = "latMax", target = "latMax")
+	@Mapping(source = "lngMin", target = "lngMin")
+	@Mapping(source = "lngMax", target = "lngMax")
 	@Mapping(target = "memberIds", ignore = true)
 	@Mapping(source = "activityLogs", target = "activityLogs")
 	TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
