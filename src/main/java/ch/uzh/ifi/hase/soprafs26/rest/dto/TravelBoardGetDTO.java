@@ -26,8 +26,13 @@ public class TravelBoardGetDTO {
     private PrivacyLevel privacy;
     
     private LocalDate dateCreated;
-    
 
+    private List<ActivityLogDTO> activityLogs;
+    
+    private Double latMin;
+    private Double latMax;
+    private Double lngMin;
+    private Double lngMax;
 
     public Long getId() {
         return id;
@@ -108,4 +113,19 @@ public class TravelBoardGetDTO {
     public void setDateCreated(LocalDate dateCreated) {
         this.dateCreated = dateCreated;
     }
+
+    public List<ActivityLogDTO> getActivityLogs() { return activityLogs; }
+    public void setActivityLogs(List<ActivityLogDTO> activityLogs) { this.activityLogs = activityLogs; }
+
+    public Double getLatMin() { return latMin; }
+    public void setLatMin(Double latMin) { this.latMin = latMin; }
+
+    public Double getLatMax() { return latMax; }
+    public void setLatMax(Double latMax) { this.latMax = latMax; }
+
+    public Double getLngMin() { return lngMin; }
+    public void setLngMin(Double lngMin) { this.lngMin = lngMin; }
+
+    public Double getLngMax() { return lngMax; }
+    public void setLngMax(Double lngMax) { this.lngMax = lngMax; }
 }

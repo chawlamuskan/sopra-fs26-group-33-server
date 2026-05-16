@@ -29,7 +29,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
-
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          
   deploy:
     name: Deploying to Google Cloud
     runs-on: ubuntu-latest
@@ -38,6 +39,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Inject env variables into app.yaml
+        run: |
+          echo "env_variables:" >> app.yaml
+          echo "  GOOGLE_MAPS_API_KEY: \"${{ secrets.GOOGLE_MAPS_API_KEY }}\"" >> app.yaml
 
       - name: Deploy to App Engine
         id: deploy

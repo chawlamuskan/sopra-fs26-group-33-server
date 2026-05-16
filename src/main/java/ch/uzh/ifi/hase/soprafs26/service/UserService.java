@@ -12,11 +12,15 @@ import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.Invitation;
+import ch.uzh.ifi.hase.soprafs26.entity.Preferences;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardPlaceRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.SavedPlaceRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.FriendRequestRepository;
+import ch.uzh.ifi.hase.soprafs26.entity.FriendRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,22 +37,28 @@ import java.util.UUID;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final PreferencesRepository preferencesRepository;
 	private final TravelBoardRepository travelBoardRepository;
 	private final InvitationRepository invitationRepository;
 	private final TravelBoardPlaceRepository travelBoardPlaceRepository;
 	private final SavedPlaceRepository savedPlaceRepository;
+	private final FriendRequestRepository friendRequestRepository;
 
 	public UserService(
 		@Qualifier("userRepository") UserRepository userRepository,
+		@Qualifier("preferencesRepository") PreferencesRepository preferencesRepository,
 		TravelBoardRepository travelBoardRepository,
 		InvitationRepository invitationRepository,
 		TravelBoardPlaceRepository travelBoardPlaceRepository,
-		SavedPlaceRepository savedPlaceRepository) {
+		SavedPlaceRepository savedPlaceRepository,
+		FriendRequestRepository friendRequestRepository) {
 		this.userRepository = userRepository;
+		this.preferencesRepository = preferencesRepository;
 		this.travelBoardRepository = travelBoardRepository;
 		this.invitationRepository = invitationRepository;
 		this.travelBoardPlaceRepository = travelBoardPlaceRepository;
 		this.savedPlaceRepository = savedPlaceRepository;
+		this.friendRequestRepository = friendRequestRepository;
 	}
 
 	public List<User> getUsers() {
@@ -236,6 +246,12 @@ public class UserService {
 			savedPlaceRepository.delete(place);
 		}
 
+		// Delete preferences explicitly before removing the user
+		Preferences preferences = preferencesRepository.findByUser(user);
+		if (preferences != null) {
+			preferencesRepository.delete(preferences);
+		}
+
 		// Delete travel board places created by this user
 		List<TravelBoardPlace> userPlaces = travelBoardPlaceRepository.findAll();
 		for (TravelBoardPlace place : userPlaces) {
@@ -251,6 +267,29 @@ public class UserService {
 				(invitation.getReceiver() != null && invitation.getReceiver().getId().equals(userId))) {
 				invitationRepository.delete(invitation);
 			}
+		}
+
+		// Delete all friend requests involving this user (as sender or receiver)
+		List<FriendRequest> allFriendRequests = friendRequestRepository.findAll();
+		for (FriendRequest fr : allFriendRequests) {
+			if ((fr.getSender() != null && fr.getSender().getId().equals(userId)) ||
+				(fr.getReceiver() != null && fr.getReceiver().getId().equals(userId))) {
+				friendRequestRepository.delete(fr);
+			}
+		}
+
+		// Remove this user from other users' friends lists
+		List<User> allUsers = userRepository.findAll();
+		for (User other : allUsers) {
+			if (other.getFriends() != null) {
+				boolean changed = other.getFriends().removeIf(f -> f.getId().equals(userId));
+				if (changed) {
+					userRepository.save(other);
+				}
+			}
+		}
+		if (user.getFriends() != null) {
+			user.getFriends().clear();
 		}
 
 		// Delete the user (Preferences should cascade delete due to CascadeType.ALL)

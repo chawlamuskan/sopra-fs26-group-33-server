@@ -13,6 +13,7 @@ public class SavedPlaceGetDTO {
     private Double lat;
     private Double lng;
     private Set<String> types;
+    private String city;
     
     public Long getId() {
         return id;
@@ -86,6 +87,12 @@ public class SavedPlaceGetDTO {
         this.types = types;
     }
 
-
     
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
 }

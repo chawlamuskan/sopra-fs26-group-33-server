@@ -17,16 +17,17 @@ public class SavedPlaceService {
 
     private final SavedPlaceRepository savedPlaceRepository;
     private final UserRepository userRepository;
+    private final GeocodingService geocodingService;
 
     public SavedPlaceService(
-        @Qualifier ("savedPlaceRepository") SavedPlaceRepository savedPlaceRepository,
-        @Qualifier ("userRepository") UserRepository userRepository) {
+        @Qualifier("savedPlaceRepository") SavedPlaceRepository savedPlaceRepository,
+        @Qualifier("userRepository") UserRepository userRepository,
+        @Qualifier("geocodingService") GeocodingService geocodingService) {
         this.savedPlaceRepository = savedPlaceRepository;
         this.userRepository = userRepository;
-       
+        this.geocodingService = geocodingService; // ← was missing
     }
 
-    // add a place to user
     public SavedPlace saveToUser(Long userId, SavedPlace newSavedPlace) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -34,28 +35,41 @@ public class SavedPlaceService {
         checkIfPlaceAlreadySaved(newSavedPlace, user);
 
         newSavedPlace.setUser(user);
-        
+
+        // Resolve city at save time if not already set
+        if (newSavedPlace.getAddress() != null && newSavedPlace.getCity() == null) {
+            newSavedPlace.setCity(geocodingService.resolveCityFromAddress(newSavedPlace.getAddress()));
+        }
+
         return savedPlaceRepository.save(newSavedPlace);
     }
 
-
-
-    // get all saved places of a user 
-    public List<SavedPlace> getSavedPlacesByUser (Long userId) {
+    public List<SavedPlace> getSavedPlacesByUser(Long userId) {
         User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         return savedPlaceRepository.findAllByUser(user);
     }
-    
+
+    // remove a place from saved places
+    public void deleteSavedPlace(Long SavedPlaceId, String token) {
+        User user = userRepository.findByToken(token);
+        SavedPlace savedPlace = savedPlaceRepository.findById(SavedPlaceId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saved place not found"));
+
+        if (!savedPlace.getUser().equals(user)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you can only delete your own saved places");
+        }
+        
+        savedPlaceRepository.delete(savedPlace);
+    }
 
 
-    // check if a place has already been saved to a user
+
     private void checkIfPlaceAlreadySaved(SavedPlace savedPlace, User user) {
         boolean alreadySaved = savedPlaceRepository.existsByExternalPlaceIdAndUser(savedPlace.getExternalPlaceId(), user);
-        
         if (alreadySaved) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Place already saved to this user");
-        } 
+        }
     }
 }

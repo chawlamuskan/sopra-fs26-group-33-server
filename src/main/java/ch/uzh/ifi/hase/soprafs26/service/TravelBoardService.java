@@ -17,27 +17,30 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Service
 @Transactional
 public class TravelBoardService {
 
-	private final Logger log = LoggerFactory.getLogger(TravelBoardService.class);
+    private final Logger log = LoggerFactory.getLogger(TravelBoardService.class);
 
-	private final TravelBoardRepository travelBoardRepository;
+    private final TravelBoardRepository travelBoardRepository;
     private final UserRepository userRepository;
+    private final ActivityLogService activityLogService; 
 
-	public TravelBoardService(@Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository, UserRepository userRepository) {
-		this.travelBoardRepository = travelBoardRepository;
+    public TravelBoardService(
+        @Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository,
+        UserRepository userRepository,
+        ActivityLogService activityLogService) { 
+        this.travelBoardRepository = travelBoardRepository;
         this.userRepository = userRepository;
-    
-	}
+        this.activityLogService = activityLogService; 
+    }
 
-	public List<TravelBoard> getTravelBoards() {
-		return this.travelBoardRepository.findAll();
-	}
+    public List<TravelBoard> getTravelBoards() {
+        return this.travelBoardRepository.findAll();
+    }
 
-	public TravelBoard createTravelBoard(TravelBoard newTravelBoard, String token) {
+    public TravelBoard createTravelBoard(TravelBoard newTravelBoard, String token) {
         User owner = userRepository.findByToken(token);
 
         if (newTravelBoard.getName() == null) {
@@ -58,8 +61,7 @@ public class TravelBoardService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Invite code already exists");
             }
             newTravelBoard.setInviteCode(inviteCode);
-        }
-        else {
+        } else {
             newTravelBoard.setInviteCode(null);
         }
 
@@ -70,15 +72,16 @@ public class TravelBoardService {
 
         newTravelBoard.setOwner(owner);
         newTravelBoard.setDateCreated(LocalDate.now());
-
-
         newTravelBoard = travelBoardRepository.save(newTravelBoard);
+
+        // ← log board creation
+        activityLogService.log(newTravelBoard, owner, "created the board");
 
         log.debug("Created Information for TravelBoard: {}", newTravelBoard);
         return newTravelBoard;
-	}
+    }
 
-    public void renameTravelBoard(Long boardId, String token, String newName){
+    public void renameTravelBoard(Long boardId, String token, String newName) {
         User user = userRepository.findByToken(token);
         Long userId = user.getId();
         TravelBoard board = travelBoardRepository.findById(boardId)
@@ -87,18 +90,15 @@ public class TravelBoardService {
         if (!board.getOwner().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you must be owner");
         }
-
         if (newName == null || newName.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Board name cannot be empty");
         }
 
         board.setName(newName.trim());
-        board = travelBoardRepository.save(board);
-
+        travelBoardRepository.save(board);
     }
 
-
-    public void deleteTravelBoard(Long boardId, String token){
+    public void deleteTravelBoard(Long boardId, String token) {
         User user = userRepository.findByToken(token);
         Long userId = user.getId();
         TravelBoard board = travelBoardRepository.findById(boardId)
@@ -113,20 +113,21 @@ public class TravelBoardService {
 
     public void leaveTravelBoard(Long boardId, String token) {
         User user = userRepository.findByToken(token);
-
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
 
         if (board.getOwner().getId().equals(user.getId())) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot leave the board with this action");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot leave the board with this action");
         }
-
         if (!board.getMembers().contains(user)) {
-          throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User is not a member of this travel board");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User is not a member of this travel board");
         }
 
         board.getMembers().remove(user);
         travelBoardRepository.save(board);
+
+        // ← log leaving
+        activityLogService.log(board, user, "left the board");
     }
 
     public List<TravelBoard> getTravelBoardsByUser(String token) {
@@ -136,56 +137,48 @@ public class TravelBoardService {
         List<TravelBoard> memberBoards = travelBoardRepository.findByMembersId(userId);
 
         List<TravelBoard> result = new ArrayList<>();
-
         result.addAll(ownerBoards);
-
         for (TravelBoard board : memberBoards) {
-            if (!result.contains(board)) {  
+            if (!result.contains(board)) {
                 result.add(board);
             }
         }
-
         return result;
     }
 
     public TravelBoard getSingleTravelBoardById(Long boardId, String token) {
         User user = userRepository.findByToken(token);
         Long userId = user.getId();
-        
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
-        
+
         if (!board.getOwner().getId().equals(userId) && !board.getMembers().contains(user)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you must be owner or member");
         }
-    
         return board;
     }
 
     public String getInviteCode(Long boardId) {
         TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel board not found"));
-        
         return board.getInviteCode();
     }
 
-    public void joinTravelBoardByInviteCode(String token, String inviteCode){
+    public void joinTravelBoardByInviteCode(String token, String inviteCode) {
         User user = userRepository.findByToken(token);
         Long userId = user.getId();
-
         TravelBoard board = travelBoardRepository.findByInviteCode(inviteCode);
 
         if (board == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invite code is invalid");
         }
-
-        if (board.getMembers().contains(user) || board.getOwner().getId().equals(userId)){
+        if (board.getMembers().contains(user) || board.getOwner().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already a member of this board");
         }
 
         board.getMembers().add(user);
-        travelBoardRepository.save(board);        
-    }
+        travelBoardRepository.save(board);
 
- 
+        activityLogService.log(board, user, "joined the board");
+    }
 }
