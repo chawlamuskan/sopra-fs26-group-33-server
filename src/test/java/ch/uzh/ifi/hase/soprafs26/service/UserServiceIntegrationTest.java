@@ -88,6 +88,7 @@ public class UserServiceIntegrationTest {
 		travelBoardRepository.deleteAll();
 		preferencesRepository.deleteAll();
 		friendRequestRepository.deleteAll();
+		savedPlaceRepository.deleteAll();
 		userRepository.deleteAll();
 	}
 	

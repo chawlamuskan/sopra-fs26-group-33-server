@@ -2,12 +2,9 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.SavedPlacePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlacePostDTO;
-import ch.uzh.ifi.hase.soprafs26.service.SavedPlaceService;
 import ch.uzh.ifi.hase.soprafs26.service.TravelBoardPlaceService;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoardPlace;
-import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 
 import static org.hamcrest.Matchers.is;

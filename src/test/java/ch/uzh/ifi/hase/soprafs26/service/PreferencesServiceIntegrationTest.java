@@ -84,6 +84,7 @@ public class PreferencesServiceIntegrationTest {
         testUser.setPassword("Test1234!");
         userService.createUser(testUser);
 	}
+
 	
 	// ================ SAVE PREFERENCES TESTS ================
     @Test	// test that preferences can be created successfully with valid input

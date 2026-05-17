@@ -18,6 +18,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.SavedPlaceRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,6 +54,10 @@ public class TravelboardServiceIntegrationTest {
     @Autowired
     private FriendRequestRepository friendRequestRepository;
 
+    @Qualifier("savedPlaceRepository")
+    @Autowired
+    private SavedPlaceRepository savedPlaceRepository;
+
 	@Autowired
 	private TravelBoardService travelBoardService;
 
@@ -62,8 +67,10 @@ public class TravelboardServiceIntegrationTest {
         friendRequestRepository.deleteAll();        
 		travelBoardRepository.deleteAll();
         preferencesRepository.deleteAll();
+        savedPlaceRepository.deleteAll();
         userRepository.deleteAll();
 	}
+
     
     //#135
     @Test

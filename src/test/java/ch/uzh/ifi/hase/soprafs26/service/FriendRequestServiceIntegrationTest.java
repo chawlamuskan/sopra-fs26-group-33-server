@@ -70,6 +70,7 @@ public class FriendRequestServiceIntegrationTest {
         userRepository.deleteAll();
         userRepository.flush();
 	}
+
     
 
     //#227
