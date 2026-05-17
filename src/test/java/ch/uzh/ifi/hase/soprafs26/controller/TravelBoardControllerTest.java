@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
-import java.util.ArrayList;
+import java.util.List;
 
 
 @WebMvcTest(TravelBoardController.class)
@@ -187,12 +187,26 @@ public class TravelBoardControllerTest {
     //#115
     @Test
     public void getTravelBoardsByUser_validToken_ok() throws Exception {
-        String token = "ABC";
+        String token = "ABC123";
     
         User user = new User();
+        user.setId(1L);
+        user.setUsername("user123");
+    
+        User member = new User();
+        member.setId(2L);
+        member.setUsername("member123");
+    
+        TravelBoard board = new TravelBoard();
+        board.setId(10L);
+        board.setName("Test Board");
+        board.setOwner(user);
+        board.setInviteCode("CODE123");
+        board.setPrivacy(PrivacyLevel.PRIVATE);
+        board.getMembers().add(member);
+    
         Mockito.when(userService.validateToken(token)).thenReturn(user);
-        Mockito.when(travelBoardService.getTravelBoardsByUser(token))
-                .thenReturn(new ArrayList<>());
+        Mockito.when(travelBoardService.getTravelBoardsByUser(token)).thenReturn(List.of(board));
     
         MockHttpServletRequestBuilder getRequest = get("/travelboards")
                 .header("Authorization", token)
@@ -251,9 +265,59 @@ public class TravelBoardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("CRE123"));
     }
-    
-	
 
+    //#265
+    @Test
+    public void leaveTravelBoard_validInput_noContent() throws Exception {
+        Long boardId = 1L;
+        String token = "ABC123";
+    
+        User user = new User();
+    
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+        Mockito.doNothing().when(travelBoardService).leaveTravelBoard(boardId, token);
+    
+        MockHttpServletRequestBuilder deleteRequest = delete("/travelboards/{boardId}/membership", boardId)
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+    
+        mockMvc.perform(deleteRequest)
+                .andExpect(status().isNoContent());
+    }
+
+    //#435
+    @Test
+    public void getSingleTravelBoardById_validInput_ok() throws Exception {
+        Long boardId = 1L;
+        String token = "ABC123";
+    
+        User owner = new User();
+        owner.setId(1L);
+        owner.setUsername("owner123");
+    
+        TravelBoard board = new TravelBoard();
+        board.setId(boardId);
+        board.setName("Test Board");
+        board.setOwner(owner);
+        board.setInviteCode("CODE123");
+        board.setPrivacy(PrivacyLevel.PRIVATE);
+    
+        Mockito.when(userService.validateToken(token)).thenReturn(owner);
+        Mockito.when(travelBoardService.getSingleTravelBoardById(boardId, token))
+                .thenReturn(board);
+    
+        MockHttpServletRequestBuilder getRequest = get("/travelboards/{boardId}", boardId)
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+    
+        mockMvc.perform(getRequest)
+                .andExpect(status().isOk());
+    
+        Mockito.verify(userService, Mockito.times(1)).validateToken(token);
+        Mockito.verify(travelBoardService, Mockito.times(1))
+                .getSingleTravelBoardById(boardId, token);
+    }
+    
 	/**
 	 * Helper Method to convert userPostDTO into a JSON string such that the input
 	 * can be processed
