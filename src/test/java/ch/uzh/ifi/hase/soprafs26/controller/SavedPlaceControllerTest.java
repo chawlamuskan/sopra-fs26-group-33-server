@@ -69,7 +69,7 @@ public class SavedPlaceControllerTest {
 	}
 
     // Helper method to mock a saved place
-    private SavedPlace mockSavedPlace(String externalPlaceId, String name, String address, Double rating, String photoReference, Double lat, Double lng, Set<String> types, User user) {
+    private SavedPlace mockSavedPlace(String externalPlaceId, String name, String address, Double rating, String photoReference, Double lat, Double lng, Set<String> types, User user, String city) {
         SavedPlace savedPlace = new SavedPlace();
         savedPlace.setExternalPlaceId(externalPlaceId);
         savedPlace.setName(name);
@@ -80,6 +80,7 @@ public class SavedPlaceControllerTest {
         savedPlace.setLng(lng);
         savedPlace.setTypes(types);
         savedPlace.setUser(user);
+        savedPlace.setCity(city);
         return savedPlace;
     }
 
@@ -100,9 +101,10 @@ public class SavedPlaceControllerTest {
         dto.setLat(321.321);
         dto.setLng(123.123);
         dto.setTypes(Set.of("Attraction", "Building"));
+        dto.setCity("Paris");
        
 
-        SavedPlace created = mockSavedPlace("9876", "Eiffel Tower", "Rue de Eiffel, 3000 Paris", 4.3, "abcde", 321.321, 123.123, Set.of("Attraction", "Building"), mockUser);
+        SavedPlace created = mockSavedPlace("9876", "Eiffel Tower", "Rue de Eiffel, 3000 Paris", 4.3, "abcde", 321.321, 123.123, Set.of("Attraction", "Building"), mockUser, "Paris");
 
         given(savedPlaceService.saveToUser(Mockito.eq(1L), Mockito.any()))
             .willReturn(created);
@@ -121,7 +123,8 @@ public class SavedPlaceControllerTest {
             .andExpect(jsonPath("$.photoReference", is("abcde")))
             .andExpect(jsonPath("$.lat", is(321.321)))
             .andExpect(jsonPath("$.lng", is(123.123)))
-            .andExpect(jsonPath("$.types", hasItems("Attraction", "Building")));
+            .andExpect(jsonPath("$.types", hasItems("Attraction", "Establishment")))
+            .andExpect(jsonPath("$.city", is("Paris")));
     }
 
     @Test 
@@ -136,7 +139,8 @@ public class SavedPlaceControllerTest {
         dto.setPhotoReference("abcde");
         dto.setLat(321.321);
         dto.setLng(123.123);
-        dto.setTypes(Set.of("Attraction", "Building"));
+        dto.setTypes(Set.of("Attraction", "Establishment"));
+        dto.setCity("Paris");
 
         given(userService.validateToken(Mockito.eq("valid-token"))).willReturn(user);
 
@@ -161,7 +165,8 @@ public class SavedPlaceControllerTest {
         dto.setPhotoReference("abcde");
         dto.setLat(321.321);
         dto.setLng(123.123);
-        dto.setTypes(Set.of("Attraction", "Building"));
+        dto.setTypes(Set.of("Attraction", "Establishment"));
+        dto.setCity("Paris");
 
     given(userService.validateToken(Mockito.isNull()))
         .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided"));
@@ -185,7 +190,7 @@ public class SavedPlaceControllerTest {
 
         User mockUser = mockUser(1L);
 
-        SavedPlace mockPlace = mockSavedPlace("9876", "Eiffel Tower", "Rue de Eiffel, 3000 Paris", 4.3, "abcde", 321.321, 123.123, Set.of("Attraction", "Building"), mockUser);
+        SavedPlace mockPlace = mockSavedPlace("9876", "Eiffel Tower", "Rue de Eiffel, 3000 Paris", 4.3, "abcde", 321.321, 123.123, Set.of("Attraction", "Building"), mockUser, "Paris");
         List<SavedPlace> savedPlaces = new ArrayList<>();
         savedPlaces.add(mockPlace);
         
@@ -208,7 +213,8 @@ public class SavedPlaceControllerTest {
             .andExpect(jsonPath("$[0].photoReference", is("abcde")))
             .andExpect(jsonPath("$[0].lat", is(321.321)))
             .andExpect(jsonPath("$[0].lng", is(123.123)))
-            .andExpect(jsonPath("$[0].types", hasItems("Attraction", "Building")));
+            .andExpect(jsonPath("$[0].types", hasItems("Attraction", "Establishment")))
+            .andExpect(jsonPath("$[0].city", is("Paris")));
 
     }
 

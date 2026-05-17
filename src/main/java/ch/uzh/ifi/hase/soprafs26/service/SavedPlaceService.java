@@ -57,7 +57,7 @@ public class SavedPlaceService {
         SavedPlace savedPlace = savedPlaceRepository.findById(SavedPlaceId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saved place not found"));
 
-        if (!savedPlace.getUser().equals(user)) {
+        if (!savedPlace.getUser().getId().equals(user.getId())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized - you can only delete your own saved places");
         }
         
