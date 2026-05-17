@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -86,7 +85,6 @@ public class PreferencesServiceIntegrationTest {
         userService.createUser(testUser);
 	}
 
-     @MockitoBean GeocodingService geocodingService;
 	
 	// ================ SAVE PREFERENCES TESTS ================
     @Test	// test that preferences can be created successfully with valid input

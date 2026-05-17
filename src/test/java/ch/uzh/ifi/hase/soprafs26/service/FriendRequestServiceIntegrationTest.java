@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ch.uzh.ifi.hase.soprafs26.constant.FriendRequestStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
@@ -72,7 +71,6 @@ public class FriendRequestServiceIntegrationTest {
         userRepository.flush();
 	}
 
-    @MockitoBean GeocodingService geocodingService;
     
 
     //#227

@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -82,8 +81,6 @@ public class UserServiceIntegrationTest {
 		preferencesRepository.deleteAll();
 		userRepository.deleteAll();
 	}
-
-	@MockitoBean GeocodingService geocodingService;
 	
 	// ================ REGISTRATION TESTS ================
 	@Test	// test that a user can be created successfully with valid input
