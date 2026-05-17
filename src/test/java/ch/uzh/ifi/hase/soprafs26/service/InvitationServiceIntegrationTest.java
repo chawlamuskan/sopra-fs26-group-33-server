@@ -23,6 +23,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Test class for the UserResource REST resource.
@@ -64,45 +65,10 @@ public class InvitationServiceIntegrationTest {
     //#155,#181
     @Test
     public void acceptInvitation_validPendingInvitation_addsUserAsBoardMember() {
-        // create user: sender/owner
-        User owner = new User();
-        owner.setName("owner");
-        owner.setUsername("owner123");
-        owner.setPassword("pw");
-        owner.setEmail("owner123@test.ch");
-        owner.setCreationDate(LocalDate.now());
-        owner.setStatus(UserStatus.ONLINE);
-        owner.setToken("ownertoken");
-        owner = userRepository.save(owner);
-
-        // create user: receiver
-        User receiver = new User();
-        receiver.setName("receiver");
-        receiver.setUsername("receiver123");
-        receiver.setPassword("pw");
-        receiver.setEmail("receiver123@test.ch");
-        receiver.setCreationDate(LocalDate.now());
-        receiver.setStatus(UserStatus.ONLINE);
-        receiver.setToken("receivertoken");
-        receiver = userRepository.save(receiver);
-
-        // create board
-        TravelBoard board = new TravelBoard();
-        board.setName("Paris Trip");
-        board.setOwner(owner);
-        board.setInviteCode("INV123");
-        board.setPrivacy(PrivacyLevel.PUBLIC);
-        board.setDateCreated(LocalDate.now());
-        board = travelBoardRepository.save(board);
-        Long boardId = board.getId();
-
-        // create invitation
-        Invitation invitation = new Invitation();
-        invitation.setBoard(board);
-        invitation.setSender(owner);
-        invitation.setReceiver(receiver);
-        invitation.setStatus(InviteStatus.PENDING);
-        invitation = invitationRepository.save(invitation);
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User receiver = createTestUser("receiver", "receiver123", "receivertoken123");
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC); 
+        Invitation invitation = createTestInvitation(board, owner, receiver, InviteStatus.PENDING);
 
         // accept invitation
         invitationService.acceptInvitation(invitation.getId(), receiver.getToken());
@@ -112,52 +78,17 @@ public class InvitationServiceIntegrationTest {
 
         assertTrue(travelBoardRepository.findByMembersId(receiver.getId())
                 .stream()
-                .anyMatch(b -> b.getId().equals(boardId)));
+                .anyMatch(b -> b.getId().equals(board.getId())));
         assertEquals(InviteStatus.ACCEPTED, updatedInvitation.getStatus());
     }
 
     //#156,#183
     @Test
     public void declineInvitation_validPendingInvitation_doesNotAddUserAsBoardMember() {
-        // create user: sender/owner
-        User owner = new User();
-        owner.setName("owner");
-        owner.setUsername("owner123");
-        owner.setPassword("pw");
-        owner.setEmail("owner123@test.ch");
-        owner.setCreationDate(LocalDate.now());
-        owner.setStatus(UserStatus.ONLINE);
-        owner.setToken("ownertoken");
-        owner = userRepository.save(owner);
-
-        // create user: receiver
-        User receiver = new User();
-        receiver.setName("receiver");
-        receiver.setUsername("receiver123");
-        receiver.setPassword("pw");
-        receiver.setEmail("receiver123@test.ch");
-        receiver.setCreationDate(LocalDate.now());
-        receiver.setStatus(UserStatus.ONLINE);
-        receiver.setToken("receivertoken");
-        receiver = userRepository.save(receiver);
-
-        // create board
-        TravelBoard board = new TravelBoard();
-        board.setName("Paris Trip");
-        board.setOwner(owner);
-        board.setInviteCode("INV123");
-        board.setPrivacy(PrivacyLevel.PUBLIC);
-        board.setDateCreated(LocalDate.now());
-        board = travelBoardRepository.save(board);
-        Long boardId = board.getId();
-
-        // create invitation
-        Invitation invitation = new Invitation();
-        invitation.setBoard(board);
-        invitation.setSender(owner);
-        invitation.setReceiver(receiver);
-        invitation.setStatus(InviteStatus.PENDING);
-        invitation = invitationRepository.save(invitation);
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User receiver = createTestUser("receiver", "receiver123", "receivertoken123");
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC); 
+        Invitation invitation = createTestInvitation(board, owner, receiver, InviteStatus.PENDING);
 
         // decline invitation
         invitationService.declineInvitation(invitation.getId(), receiver.getToken());
@@ -167,52 +98,24 @@ public class InvitationServiceIntegrationTest {
 
         assertFalse(travelBoardRepository.findByMembersId(receiver.getId())
                 .stream()
-                .anyMatch(b -> b.getId().equals(boardId)));
+                .anyMatch(b -> b.getId().equals(board.getId())));
         assertEquals(InviteStatus.DECLINED, updatedInvitation.getStatus());
     }
 
     //#180
     @Test
     public void createInvitation_validInput_storesInvitationInDatabase() {
-        // create user: sender/owner
-        User owner = new User();
-        owner.setName("owner");
-        owner.setUsername("owner123");
-        owner.setPassword("pw");
-        owner.setEmail("owner123@test.ch");
-        owner.setCreationDate(LocalDate.now());
-        owner.setStatus(UserStatus.ONLINE);
-        owner.setToken("ownertoken");
-        owner = userRepository.save(owner);
-
-        // create user: receiver
-        User receiver = new User();
-        receiver.setName("receiver");
-        receiver.setUsername("receiver123");
-        receiver.setPassword("pw");
-        receiver.setEmail("receiver123@test.ch");
-        receiver.setCreationDate(LocalDate.now());
-        receiver.setStatus(UserStatus.ONLINE);
-        receiver.setToken("receivertoken");
-        receiver = userRepository.save(receiver);
-
-        // create board
-        TravelBoard board = new TravelBoard();
-        board.setName("Paris Trip");
-        board.setOwner(owner);
-        board.setInviteCode("CODE123");
-        board.setPrivacy(PrivacyLevel.PUBLIC);
-        board.setDateCreated(LocalDate.now());
-        board = travelBoardRepository.save(board);
-        Long boardId = board.getId();
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User receiver = createTestUser("receiver", "receiver123", "receivertoken123");
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC); 
     
         // create invitation
-        Invitation createdInvitation = invitationService.createInvitation(boardId, owner.getToken(), receiver.getId());
+        Invitation createdInvitation = invitationService.createInvitation(board.getId(), owner.getToken(), receiver.getId());
         
         // assert
         assertNotNull(createdInvitation.getId());
         assertEquals(InviteStatus.PENDING, createdInvitation.getStatus());
-        assertEquals(boardId, createdInvitation.getBoard().getId());
+        assertEquals(board.getId(), createdInvitation.getBoard().getId());
         assertEquals(owner.getId(), createdInvitation.getSender().getId());
         assertEquals(receiver.getId(), createdInvitation.getReceiver().getId());
     }
@@ -220,58 +123,87 @@ public class InvitationServiceIntegrationTest {
     //#182
     @Test
     public void createInvitation_nonOwner_throwsUnauthorized() {
-        // create owner
-        User owner = new User();
-        owner.setName("owner");
-        owner.setUsername("owner123");
-        owner.setPassword("pw");
-        owner.setEmail("owner123@test.ch");
-        owner.setCreationDate(LocalDate.now());
-        owner.setStatus(UserStatus.ONLINE);
-        owner.setToken("ownertoken");
-        owner = userRepository.save(owner);
-
-        // create non-owner (sender)
-        User sender = new User();
-        sender.setName("sender");
-        sender.setUsername("sender123");
-        sender.setPassword("pw");
-        sender.setEmail("sender123@test.ch");
-        sender.setCreationDate(LocalDate.now());
-        sender.setStatus(UserStatus.ONLINE);
-        sender.setToken("sendertoken123");
-        sender = userRepository.save(sender);
-        String senderToken = sender.getToken();
-
-        // create receiver
-        User receiver = new User();
-        receiver.setName("receiver");
-        receiver.setUsername("receiver182");
-        receiver.setPassword("pw");
-        receiver.setEmail("receiver182@test.ch");
-        receiver.setCreationDate(LocalDate.now());
-        receiver.setStatus(UserStatus.ONLINE);
-        receiver.setToken("receiver-token-182");
-        receiver = userRepository.save(receiver);
-        Long receiverId = receiver.getId();
-
-        // create board with owner
-        TravelBoard board = new TravelBoard();
-        board.setName("Owner Only Board");
-        board.setOwner(owner);
-        board.setInviteCode("INV182");
-        board.setPrivacy(PrivacyLevel.PUBLIC);
-        board.setDateCreated(LocalDate.now());
-        board = travelBoardRepository.save(board);
-        Long boardId = board.getId();
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User sender = createTestUser("sender", "sender123", "sendertoken123");
+        User receiver = createTestUser("receiver", "receiver123", "receivertoken123");
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC); 
 
         // assert: non-owner tries to create invitation → should fail
         ResponseStatusException exception = assertThrows(
             ResponseStatusException.class,
-            () -> invitationService.createInvitation(boardId, senderToken, receiverId)
+            () -> invitationService.createInvitation(board.getId(), sender.getToken(), receiver.getId())
         );
 
         assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
     }
 
+    //#262
+    @Test
+    public void getPendingInvitations_returnsOnlyPendingInvitations() {
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User receiver = createTestUser("receiver", "receiver123", "receivertoken123");
+        User otherReceiver = createTestUser("otherReceiver", "otherReceiver123", "othertoken123");
+    
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC);
+    
+        Invitation pendingInvitation = createTestInvitation(board, owner, receiver, InviteStatus.PENDING);
+        Invitation acceptedInvitation = createTestInvitation(board, owner, receiver, InviteStatus.ACCEPTED);
+        Invitation declinedInvitation = createTestInvitation(board, owner, receiver, InviteStatus.DECLINED);
+        Invitation otherUserInvitation = createTestInvitation(board, owner, otherReceiver, InviteStatus.PENDING);
+    
+        List<Invitation> pendingInvitations = invitationService.getPendingInvitations(receiver.getToken());
+    
+        assertTrue(pendingInvitations.stream().anyMatch(invitation -> invitation.getId().equals(pendingInvitation.getId())));
+        assertFalse(pendingInvitations.stream().anyMatch(invitation -> invitation.getId().equals(acceptedInvitation.getId())));
+        assertFalse(pendingInvitations.stream().anyMatch(invitation -> invitation.getId().equals(declinedInvitation.getId())));
+        assertFalse(pendingInvitations.stream().anyMatch(invitation -> invitation.getId().equals(otherUserInvitation.getId())));
+    }
+
+    //#263
+    @Test
+    public void createInvitation_duplicatePendingInvitation_throwsConflict() {
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User receiver = createTestUser("receiver", "receiver123", "receivertoken123");
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC);
+
+        invitationService.createInvitation(board.getId(), owner.getToken(), receiver.getId());
+
+        ResponseStatusException exception = assertThrows(
+            ResponseStatusException.class,
+            () -> invitationService.createInvitation(board.getId(), owner.getToken(), receiver.getId())
+        );
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+    }
+
+    private User createTestUser(String name, String username, String token) {
+        User user = new User();
+        user.setName(name);
+        user.setUsername(username);
+        user.setPassword("pw");
+        user.setEmail(username + "@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken(token);
+        return userRepository.save(user);
+    }
+
+    private TravelBoard createTestBoard(String name, User owner, String inviteCode, PrivacyLevel privacy) {
+        TravelBoard board = new TravelBoard();
+        board.setName(name);
+        board.setOwner(owner);
+        board.setInviteCode(inviteCode);
+        board.setPrivacy(privacy);
+        board.setDateCreated(LocalDate.now());
+        return travelBoardRepository.save(board);
+    }
+
+    private Invitation createTestInvitation(TravelBoard board, User sender, User receiver, InviteStatus status) {
+        Invitation invitation = new Invitation();
+        invitation.setBoard(board);
+        invitation.setSender(sender);
+        invitation.setReceiver(receiver);
+        invitation.setStatus(status);
+        return invitationRepository.save(invitation);
+    }
 }

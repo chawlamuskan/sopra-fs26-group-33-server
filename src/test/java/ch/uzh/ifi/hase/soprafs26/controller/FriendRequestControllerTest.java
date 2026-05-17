@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
@@ -106,6 +107,103 @@ public class FriendRequestControllerTest {
     
         mockMvc.perform(getRequest)
                 .andExpect(status().isOk());
+    }
+
+    //#405
+    @Test
+    public void acceptFriendRequest_validInput_returnsNoContent() throws Exception {
+        String token = "ABC123";
+        Long friendRequestId = 100L;
+    
+        User user = new User();
+    
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+        Mockito.doNothing().when(friendRequestService).acceptFriendRequest(friendRequestId, token);
+    
+        MockHttpServletRequestBuilder putRequest = put("/friendRequests/{friendRequestId}/accept", friendRequestId)
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+    
+        mockMvc.perform(putRequest)
+                .andExpect(status().isNoContent());
+    }
+
+    //#406
+    @Test
+    public void declineFriendRequest_validInput_returnsNoContent() throws Exception {
+        String token = "ABC123";
+        Long friendRequestId = 100L;
+    
+        User user = new User();
+    
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+        Mockito.doNothing().when(friendRequestService).declineFriendRequest(friendRequestId, token);
+    
+        MockHttpServletRequestBuilder putRequest = put("/friendRequests/{friendRequestId}/decline", friendRequestId)
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+    
+        mockMvc.perform(putRequest)
+                .andExpect(status().isNoContent());
+    }
+
+    //#402
+    @Test
+    public void getFriends_validToken_returnsOk() throws Exception {
+        String token = "ABC123";
+    
+        User user = new User();
+        user.setId(1L);
+
+        User friend = new User();
+        friend.setId(2L);
+        friend.setName("Friend Name");
+        friend.setUsername("friend123");
+        friend.setEmail("friend@example.com");
+    
+        Mockito.when(userService.validateToken(token)).thenReturn(user);
+        Mockito.when(friendRequestService.getFriends(token)).thenReturn(List.of(friend));
+    
+        MockHttpServletRequestBuilder getRequest = get("/friends")
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+    
+        mockMvc.perform(getRequest)
+                .andExpect(status().isOk());
+    }
+
+    //#223
+    @Test
+    public void sendFriendRequest_validInput_returnsCreated() throws Exception {
+        String token = "ABC123";
+    
+        FriendRequestPostDTO friendRequestPostDTO = new FriendRequestPostDTO();
+        friendRequestPostDTO.setReceiverId(2L);
+    
+        User sender = new User();
+        sender.setId(1L);
+        sender.setUsername("sender123");
+
+        User receiver = new User();
+        receiver.setId(2L);
+        receiver.setUsername("receiver123");
+    
+        FriendRequest createdRequest = new FriendRequest();
+        createdRequest.setId(100L);
+        createdRequest.setSender(sender);
+        createdRequest.setReceiver(receiver);
+        createdRequest.setStatus(FriendRequestStatus.PENDING);
+    
+        Mockito.when(userService.validateToken(token)).thenReturn(sender);
+        Mockito.when(friendRequestService.sendFriendRequest(token, 2L)).thenReturn(createdRequest);
+    
+        MockHttpServletRequestBuilder postRequest = post("/friendRequests")
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(friendRequestPostDTO));
+    
+        mockMvc.perform(postRequest)
+                .andExpect(status().isCreated());
     }
 
 	

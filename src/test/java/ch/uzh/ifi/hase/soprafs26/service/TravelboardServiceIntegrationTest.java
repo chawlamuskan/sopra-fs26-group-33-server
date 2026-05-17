@@ -18,10 +18,12 @@ import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.SavedPlaceRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Test class for the UserResource REST resource.
@@ -52,6 +54,10 @@ public class TravelboardServiceIntegrationTest {
     @Autowired
     private FriendRequestRepository friendRequestRepository;
 
+    @Qualifier("savedPlaceRepository")
+    @Autowired
+    private SavedPlaceRepository savedPlaceRepository;
+
 	@Autowired
 	private TravelBoardService travelBoardService;
 
@@ -61,22 +67,15 @@ public class TravelboardServiceIntegrationTest {
         friendRequestRepository.deleteAll();        
 		travelBoardRepository.deleteAll();
         preferencesRepository.deleteAll();
+        savedPlaceRepository.deleteAll();
         userRepository.deleteAll();
 	}
+
     
     //#135
     @Test
     public void createTravelBoard_validInput_createsTravelBoard() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
+        User user = createTestUser("owner", "owner123", "token123");
 
         // create travel board input
         TravelBoard board = new TravelBoard();
@@ -102,17 +101,7 @@ public class TravelboardServiceIntegrationTest {
     //#136 - Missing name
     @Test
     public void createTravelBoard_missingName_throwsBadRequest() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
-        String userToken = user.getToken();
+        User user = createTestUser("owner", "owner123", "token123");
 
         //create board
         TravelBoard board = new TravelBoard();
@@ -123,7 +112,7 @@ public class TravelboardServiceIntegrationTest {
         // assert
         ResponseStatusException exception = assertThrows(
             ResponseStatusException.class,
-            () -> travelBoardService.createTravelBoard(board, userToken)
+            () -> travelBoardService.createTravelBoard(board, user.getToken())
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
@@ -132,17 +121,7 @@ public class TravelboardServiceIntegrationTest {
     //#136 - Missing privacy
     @Test
     public void createTravelBoard_missingPrivacy_throwsBadRequest() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
-        String userToken = user.getToken();
+        User user = createTestUser("owner", "owner123", "token123");
 
         //create board
         TravelBoard board = new TravelBoard();
@@ -153,7 +132,7 @@ public class TravelboardServiceIntegrationTest {
         // assert
         ResponseStatusException exception = assertThrows(
             ResponseStatusException.class,
-            () -> travelBoardService.createTravelBoard(board, userToken)
+            () -> travelBoardService.createTravelBoard(board, user.getToken())
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
@@ -162,17 +141,7 @@ public class TravelboardServiceIntegrationTest {
     //#136 - Invalid dates
     @Test
     public void createTravelBoard_startDateAfterEndDate_throwsBadRequest() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
-        String userToken = user.getToken();
+        User user = createTestUser("owner", "owner123", "token123");
 
         //create board
         TravelBoard board = new TravelBoard();
@@ -185,7 +154,7 @@ public class TravelboardServiceIntegrationTest {
         // assert
         ResponseStatusException exception = assertThrows(
             ResponseStatusException.class,
-            () -> travelBoardService.createTravelBoard(board, userToken)
+            () -> travelBoardService.createTravelBoard(board, user.getToken())
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
@@ -194,24 +163,14 @@ public class TravelboardServiceIntegrationTest {
     //#136 - Duplicate invite Code ,#138
     @Test
     public void createTravelBoard_duplicateInviteCode_throwsConflict() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
-        String userToken = user.getToken();
+        User user = createTestUser("owner", "owner123", "token123");
 
         //create first board
         TravelBoard firstBoard = new TravelBoard();
         firstBoard.setName("First Trip");
         firstBoard.setPrivacy(PrivacyLevel.PRIVATE);
         firstBoard.setInviteCode("DUP123");
-        firstBoard = travelBoardService.createTravelBoard(firstBoard, userToken);
+        firstBoard = travelBoardService.createTravelBoard(firstBoard, user.getToken());
 
         //create second board with the same invite Code
         TravelBoard secondBoard = new TravelBoard();
@@ -221,7 +180,7 @@ public class TravelboardServiceIntegrationTest {
 
         ResponseStatusException exception = assertThrows(
             ResponseStatusException.class,
-            () -> travelBoardService.createTravelBoard(secondBoard, userToken)
+            () -> travelBoardService.createTravelBoard(secondBoard, user.getToken())
         );
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
@@ -230,75 +189,27 @@ public class TravelboardServiceIntegrationTest {
     //#118
     @Test
     public void deleteTravelBoard_removesBoardFromDatabase() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
-    
-        // simulate login token
-        user.setToken("token123");
-        userRepository.save(user);
-    
-        // create board
-        TravelBoard board = new TravelBoard();
-        board.setName("Test Board");
-        board.setOwner(user);
-        board.setInviteCode("DEL123");
-        board.setPrivacy(PrivacyLevel.PUBLIC);
-        board.setDateCreated(LocalDate.now());
-    
-        board = travelBoardRepository.save(board);
-    
-        Long boardId = board.getId();
+        User user = createTestUser("owner", "owner123", "token123");
+        TravelBoard board = createTestBoard("Test Board", user, "CODE123", PrivacyLevel.PUBLIC); 
     
         // delete
-        travelBoardService.deleteTravelBoard(boardId, "token123");
+        travelBoardService.deleteTravelBoard(board.getId(), "token123");
     
         // assert
-        assertTrue(travelBoardRepository.findById(boardId).isEmpty());
+        assertTrue(travelBoardRepository.findById(board.getId()).isEmpty());
     }
 
     //#119
     @Test
     public void renameTravelBoard_updatesBoardNameInDatabase() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
-
-        // simulate login token
-        user.setToken("token123");
-        userRepository.save(user);
-
-        // create board
-        TravelBoard board = new TravelBoard();
-        board.setName("Old Name");
-        board.setOwner(user);
-        board.setInviteCode("REN123");
-        board.setPrivacy(PrivacyLevel.PUBLIC);
-        board.setDateCreated(LocalDate.now());
-
-        board = travelBoardRepository.save(board);
-
-        Long boardId = board.getId();
+        User user = createTestUser("owner", "owner123", "token123");
+        TravelBoard board = createTestBoard("Old Name", user, "CODE123", PrivacyLevel.PUBLIC); 
 
         // rename
-        travelBoardService.renameTravelBoard(boardId, "token123", "New Name");
+        travelBoardService.renameTravelBoard(board.getId(), "token123", "New Name");
 
         // assert
-        TravelBoard updated = travelBoardRepository.findById(boardId).orElseThrow();
+        TravelBoard updated = travelBoardRepository.findById(board.getId()).orElseThrow();
 
         assertEquals("New Name", updated.getName());
     }
@@ -306,30 +217,9 @@ public class TravelboardServiceIntegrationTest {
     //#139
     @Test
     public void getInviteCode_returnsCorrectCodeForEachBoard() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
-
-        // create first board
-        TravelBoard board1 = new TravelBoard();
-        board1.setName("First Trip");
-        board1.setPrivacy(PrivacyLevel.PRIVATE);
-        board1.setInviteCode("1CODE123");
-        board1 = travelBoardService.createTravelBoard(board1, user.getToken());
-
-        // create second board
-        TravelBoard board2 = new TravelBoard();
-        board2.setName("SecondTrip");
-        board2.setPrivacy(PrivacyLevel.PUBLIC);
-        board2.setInviteCode("2CODE123");
-        board2 = travelBoardService.createTravelBoard(board2, user.getToken());
+        User user = createTestUser("owner", "owner123", "token123");
+        TravelBoard board1 = createTestBoard("First Trip", user, "1CODE123", PrivacyLevel.PRIVATE);
+        TravelBoard board2 = createTestBoard("SecondTrip", user, "2CODE123", PrivacyLevel.PUBLIC);
 
         // get invite codes
         String inviteCode1 = travelBoardService.getInviteCode(board1.getId());
@@ -344,91 +234,40 @@ public class TravelboardServiceIntegrationTest {
     //#153,#117
     @Test
     public void joinTravelBoard_validCode_userAddedToMembers() {
-        // create user
-        User user = new User();
-        user.setName("owner");
-        user.setUsername("owner123");
-        user.setPassword("pw");
-        user.setEmail("owner123@test.ch");
-        user.setCreationDate(LocalDate.now());
-        user.setStatus(UserStatus.ONLINE);
-        user.setToken("token123");
-        user = userRepository.save(user);
-
-        // create user to join
-        User joiner = new User();
-        joiner.setName("joiner");
-        joiner.setUsername("joiner123");
-        joiner.setPassword("pw");
-        joiner.setEmail("joiner123@test.ch");
-        joiner.setCreationDate(LocalDate.now());
-        joiner.setStatus(UserStatus.ONLINE);
-        joiner.setToken("token456");
-        joiner = userRepository.save(joiner);
-
-        // create board
-        TravelBoard board = new TravelBoard();
-        board.setName("Old Name");
-        board.setOwner(user);
-        board.setInviteCode("ABC123");
-        board.setPrivacy(PrivacyLevel.PUBLIC);
-        board.setDateCreated(LocalDate.now());
-
-        board = travelBoardRepository.save(board);
-        Long boardId = board.getId();
+        User user = createTestUser("owner", "owner123", "token123");
+        User joiner = createTestUser("joiner", "joiner123", "token456");
+        TravelBoard board = createTestBoard("Test Board", user, "CODE123", PrivacyLevel.PUBLIC); 
 
         // join add member
-        travelBoardService.joinTravelBoardByInviteCode(joiner.getToken(), "ABC123");
+        travelBoardService.joinTravelBoardByInviteCode(joiner.getToken(), "CODE123");
 
         // assert
         assertTrue(travelBoardService.getTravelBoardsByUser(joiner.getToken())
                 .stream() // verifies that the board the joiner joined is now included in their travel board list
-                .anyMatch(b -> b.getId().equals(boardId))); // true if any board in that list has the expected ID
+                .anyMatch(b -> b.getId().equals(board.getId()))); // true if any board in that list has the expected ID
+    }
+
+    //#154
+    @Test
+    public void joinTravelBoard_invalidInviteCode_throwsNotFound() {
+        User user = createTestUser("user", "user123", "usertoken123");
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> travelBoardService.joinTravelBoardByInviteCode(user.getToken(), "INVALID123")
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
     //#265
     @Test
     public void leaveTravelBoard_validMember_removesOnlyThatUsersMembership() {
-        // create user: owner
-        User owner = new User();
-        owner.setName("owner");
-        owner.setUsername("owner123");
-        owner.setPassword("pw");
-        owner.setEmail("owner123@test.ch");
-        owner.setCreationDate(LocalDate.now());
-        owner.setStatus(UserStatus.ONLINE);
-        owner.setToken("ownertoken");
-        owner = userRepository.save(owner);
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User member1 = createTestUser("member1", "member123", "member123");
+        User member2 = createTestUser("member2", "member456", "member456");
 
-        // create user: member1
-        User member1 = new User();
-        member1.setName("member1");
-        member1.setUsername("member123");
-        member1.setPassword("pw");
-        member1.setEmail("member123@test.ch");
-        member1.setCreationDate(LocalDate.now());
-        member1.setStatus(UserStatus.ONLINE);
-        member1.setToken("member-token-1");
-        member1 = userRepository.save(member1);
-
-        // create user: member2
-        User member2 = new User();
-        member2.setName("member2");
-        member2.setUsername("member456");
-        member2.setPassword("pw");
-        member2.setEmail("member456@test.ch");
-        member2.setCreationDate(LocalDate.now());
-        member2.setStatus(UserStatus.ONLINE);
-        member2.setToken("member-token-2");
-        member2 = userRepository.save(member2);
-
-        // create board
-        TravelBoard board = new TravelBoard();
-        board.setName("Group Trip");
-        board.setOwner(owner);
-        board.setInviteCode("LEAVE123");
-        board.setPrivacy(PrivacyLevel.PUBLIC);
-        board.setDateCreated(LocalDate.now());
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC); 
         board.getMembers().add(member1);
         board.getMembers().add(member2);
         board = travelBoardRepository.save(board);
@@ -445,5 +284,62 @@ public class TravelboardServiceIntegrationTest {
         assertTrue(travelBoardRepository.findByMembersId(member2.getId())
                 .stream()
                 .anyMatch(b -> b.getId().equals(boardId)));
+    }
+
+    //#115
+    @Test
+    public void getTravelBoardsByUser_returnsOwnedAndJoinedBoards() {
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        User member = createTestUser("member", "member123", "membertoken123");
+        User otherUser = createTestUser("otherUser", "otherUser123", "othertoken123");
+    
+        TravelBoard ownedBoard = createTestBoard("Owned Board", member, "CODE123", PrivacyLevel.PUBLIC);
+        TravelBoard joinedBoard = createTestBoard("Joined Board", owner, "CODE456", PrivacyLevel.PRIVATE);
+        TravelBoard unrelatedBoard = createTestBoard("Unrelated Board", otherUser, "CODE789", PrivacyLevel.PUBLIC);
+    
+        joinedBoard.getMembers().add(member);
+        travelBoardRepository.save(joinedBoard);
+    
+        List<TravelBoard> boards = travelBoardService.getTravelBoardsByUser(member.getToken());
+    
+        assertTrue(boards.stream().anyMatch(board -> board.getId().equals(ownedBoard.getId())));
+        assertTrue(boards.stream().anyMatch(board -> board.getId().equals(joinedBoard.getId())));
+        assertFalse(boards.stream().anyMatch(board -> board.getId().equals(unrelatedBoard.getId())));
+    }
+
+    //#435
+    @Test
+    public void getSingleTravelBoardById_owner_returnsBoard() {
+        User owner = createTestUser("owner", "owner123", "ownertoken123");
+        TravelBoard board = createTestBoard("Test Board", owner, "CODE123", PrivacyLevel.PUBLIC);
+
+        TravelBoard foundBoard = travelBoardService.getSingleTravelBoardById(board.getId(), owner.getToken());
+
+        assertEquals(board.getId(), foundBoard.getId());
+        assertEquals("Test Board", foundBoard.getName());
+        assertEquals(owner.getId(), foundBoard.getOwner().getId());
+    }
+
+
+    private User createTestUser(String name, String username, String token) {
+        User user = new User();
+        user.setName(name);
+        user.setUsername(username);
+        user.setPassword("pw");
+        user.setEmail(username + "@test.ch");
+        user.setCreationDate(LocalDate.now());
+        user.setStatus(UserStatus.ONLINE);
+        user.setToken(token);
+        return userRepository.save(user);
+    }
+
+    private TravelBoard createTestBoard(String name, User owner, String inviteCode, PrivacyLevel privacy) {
+        TravelBoard board = new TravelBoard();
+        board.setName(name);
+        board.setOwner(owner);
+        board.setInviteCode(inviteCode);
+        board.setPrivacy(privacy);
+        board.setDateCreated(LocalDate.now());
+        return travelBoardRepository.save(board);
     }
 }
