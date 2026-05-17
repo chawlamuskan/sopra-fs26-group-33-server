@@ -29,11 +29,13 @@ public class InvitationService {
     private final InvitationRepository invitationRepository;
 	private final TravelBoardRepository travelBoardRepository;
     private final UserRepository userRepository;
+    private final ActivityLogService activityLogService; 
 
-    public InvitationService(@Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository, InvitationRepository invitationRepository, UserRepository userRepository) {
+    public InvitationService(@Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository, InvitationRepository invitationRepository, UserRepository userRepository, ActivityLogService activityLogService) {
 		this.travelBoardRepository = travelBoardRepository;
         this.invitationRepository = invitationRepository;
         this.userRepository = userRepository;
+        this.activityLogService = activityLogService; 
 	}
 
 	public List<Invitation> getInvitations() {
@@ -103,6 +105,8 @@ public class InvitationService {
 
         invitation.setStatus(InviteStatus.ACCEPTED);
         invitationRepository.save(invitation);
+
+        activityLogService.log(board, user, "joined the board");
     }
 
     public void declineInvitation(Long invitationId, String token){

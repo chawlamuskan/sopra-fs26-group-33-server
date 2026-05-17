@@ -18,7 +18,12 @@ public class TravelBoardPostDTO {
 
 	private String inviteCode;
 
-	private PrivacyLevel privacy; 			
+	private PrivacyLevel privacy; 	
+	
+	private Double latMin;
+	private Double latMax;
+	private Double lngMin;
+	private Double lngMax;
 
 
 	public String getName() {
@@ -68,5 +73,17 @@ public class TravelBoardPostDTO {
 	public void setPrivacy(PrivacyLevel privacy) {
 		this.privacy = privacy;
 	}
+
+	public Double getLatMin() { return latMin; }
+	public void setLatMin(Double latMin) { this.latMin = latMin; }
+
+	public Double getLatMax() { return latMax; }
+	public void setLatMax(Double latMax) { this.latMax = latMax; }
+
+	public Double getLngMin() { return lngMin; }
+	public void setLngMin(Double lngMin) { this.lngMin = lngMin; }
+
+	public Double getLngMax() { return lngMax; }
+	public void setLngMax(Double lngMax) { this.lngMax = lngMax; }
 
 }
