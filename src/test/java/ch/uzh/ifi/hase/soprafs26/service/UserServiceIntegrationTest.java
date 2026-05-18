@@ -12,6 +12,7 @@ import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.JoinRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.SavedPlaceRepository;
@@ -82,9 +83,14 @@ public class UserServiceIntegrationTest {
 	@Autowired
 	private FriendRequestRepository friendRequestRepository;
 
+	@Qualifier("joinRequestRepository")
+	@Autowired
+	private JoinRequestRepository joinRequestRepository;
+
 	@BeforeEach
 	public void setup() {
 		invitationRepository.deleteAll();
+		joinRequestRepository.deleteAll();
 		travelBoardRepository.deleteAll();
 		preferencesRepository.deleteAll();
 		friendRequestRepository.deleteAll();

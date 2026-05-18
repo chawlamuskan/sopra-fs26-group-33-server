@@ -1,8 +1,11 @@
 package ch.uzh.ifi.hase.soprafs26.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
@@ -15,4 +18,8 @@ public interface TravelBoardRepository extends JpaRepository<TravelBoard, Long> 
     List<TravelBoard> findByOwnerIdOrMembersId(Long ownerId, Long userId);
     List<TravelBoard> findByPrivacy(PrivacyLevel privacy);
     TravelBoard findByInviteCode(String inviteCode);
+
+    @Query("SELECT tb FROM TravelBoard tb LEFT JOIN FETCH tb.members WHERE tb.id = :id")
+    Optional<TravelBoard> findByIdWithMembers(@Param("id") Long id);
+
 }

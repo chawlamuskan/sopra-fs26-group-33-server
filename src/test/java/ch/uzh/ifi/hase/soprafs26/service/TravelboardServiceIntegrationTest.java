@@ -15,6 +15,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.FriendRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.JoinRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
@@ -54,6 +55,10 @@ public class TravelboardServiceIntegrationTest {
     @Autowired
     private FriendRequestRepository friendRequestRepository;
 
+    @Qualifier("joinRequestRepository")
+    @Autowired
+    private JoinRequestRepository joinRequestRepository;
+
     @Qualifier("savedPlaceRepository")
     @Autowired
     private SavedPlaceRepository savedPlaceRepository;
@@ -63,6 +68,7 @@ public class TravelboardServiceIntegrationTest {
 
 	@BeforeEach
 	public void setup() {
+        joinRequestRepository.deleteAll();
         invitationRepository.deleteAll();
         friendRequestRepository.deleteAll();        
 		travelBoardRepository.deleteAll();

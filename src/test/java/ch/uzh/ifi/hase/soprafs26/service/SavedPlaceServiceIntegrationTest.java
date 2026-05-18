@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.SavedPlace;
+import ch.uzh.ifi.hase.soprafs26.repository.JoinRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.SavedPlaceRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
@@ -36,6 +37,10 @@ public class SavedPlaceServiceIntegrationTest {
     @Autowired
 	private UserService userService;
 
+    @Qualifier("joinRequestRepository")
+    @Autowired
+    private JoinRequestRepository joinRequestRepository;
+
     private User testUser;
     private User testUser2;
 
@@ -43,6 +48,7 @@ public class SavedPlaceServiceIntegrationTest {
 	public void setup() {
         savedPlaceRepository.deleteAll();
 		userRepository.deleteAll();
+        joinRequestRepository.deleteAll();
 
         // GIVEN a registered user in the database
         testUser = new User();
