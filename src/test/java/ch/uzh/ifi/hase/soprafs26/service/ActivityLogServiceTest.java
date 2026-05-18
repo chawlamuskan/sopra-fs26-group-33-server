@@ -80,6 +80,7 @@ public class ActivityLogServiceTest {
         ActivityLog saved = captor.getValue();
         assertEquals("joined the board", saved.getAction());
     }
+    
     @Test
     // Test that repository save is called exactly once per log call
     public void log_calledMultipleTimes_savesEachLog() {
