@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,13 +18,11 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.JoinRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 

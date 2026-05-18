@@ -1,8 +1,5 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-
 import ch.uzh.ifi.hase.soprafs26.constant.JoinRequestStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.JoinRequest;
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
@@ -389,14 +386,5 @@ public class JoinRequestControllerTest {
         // THEN return 401 UNAUTHORIZED
         mockMvc.perform(putRequest)
                 .andExpect(status().isUnauthorized());
-    }
-
-    private String asJsonString(final Object object) {
-        try {
-            return new ObjectMapper().writeValueAsString(object);
-        } catch (JacksonException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    String.format("The request body could not be created.%s", e.toString()));
-        }
     }
 }
