@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import ch.uzh.ifi.hase.soprafs26.constant.PrivacyLevel;
 
 import ch.uzh.ifi.hase.soprafs26.entity.TravelBoard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -146,6 +147,20 @@ public class TravelBoardService {
         return result;
     }
 
+    // despoina
+    public List<TravelBoard> getTravelBoardsBySpecificUser(Long userId) {
+        List<TravelBoard> ownerBoards = travelBoardRepository.findByOwnerId(userId);
+        List<TravelBoard> memberBoards = travelBoardRepository.findByMembersId(userId);
+        List<TravelBoard> result = new ArrayList<>();
+        result.addAll(ownerBoards);
+        for (TravelBoard board : memberBoards) {
+            if (!result.contains(board)) {  
+                result.add(board);
+            }
+        }
+        return result;    
+    }
+
     public TravelBoard getSingleTravelBoardById(Long boardId, String token) {
         User user = userRepository.findByToken(token);
         Long userId = user.getId();
@@ -157,6 +172,15 @@ public class TravelBoardService {
         }
         return board;
     }
+
+    public TravelBoard getPublicTravelBoardById(Long boardId) {
+    TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Board not found"));
+    if (board.getPrivacy() == PrivacyLevel.PRIVATE) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This board is private");}
+    return board;
+}
 
     public String getInviteCode(Long boardId) {
         TravelBoard board = travelBoardRepository.findById(boardId)
@@ -180,5 +204,15 @@ public class TravelBoardService {
         travelBoardRepository.save(board);
 
         activityLogService.log(board, user, "joined the board");
+    }
+
+    public List<TravelBoard> getPublicTravelBoards() {
+        return travelBoardRepository.findByPrivacy(PrivacyLevel.PUBLIC);
+ 
+    }
+
+    public List<TravelBoard> getFriendsTravelBoards() {
+        return travelBoardRepository.findByPrivacy(PrivacyLevel.FRIENDS);
+ 
     }
 }

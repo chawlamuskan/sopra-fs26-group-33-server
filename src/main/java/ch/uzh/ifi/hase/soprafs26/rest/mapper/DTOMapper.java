@@ -24,6 +24,8 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlaceGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TravelBoardPlacePostDTO;
+import ch.uzh.ifi.hase.soprafs26.entity.JoinRequest;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.JoinRequestGetDTO;
 import java.util.List;
 
 @Mapper
@@ -116,6 +118,15 @@ public interface DTOMapper {
 	@Mapping(source = "status", target = "status")
 	@Mapping(source = "sender.username", target = "senderUsername")
     FriendRequestGetDTO convertEntityToFriendRequestGetDTO(FriendRequest createdFriendRequest);
+
+	// ==================== Join Request Mappings ====================
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "board.id", target = "boardId")
+	@Mapping(source = "sender.id", target = "senderId")
+	@Mapping(source = "sender.username", target = "senderUsername")
+	@Mapping(source = "board.name", target = "boardName")
+	@Mapping(source = "status", target = "status")
+	JoinRequestGetDTO convertEntityToJoinRequestGetDTO(JoinRequest joinRequest);
 
 	// ==================== Saved Places Mappings ====================
 	@Mapping(source = "externalPlaceId", target = "externalPlaceId")

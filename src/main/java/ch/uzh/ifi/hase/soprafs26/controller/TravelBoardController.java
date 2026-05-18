@@ -16,9 +16,6 @@ import ch.uzh.ifi.hase.soprafs26.service.TravelBoardService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
 
-
-
-
 @RestController
 public class TravelBoardController {
 
@@ -94,23 +91,16 @@ public class TravelBoardController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public TravelBoardGetDTO getSingleTravelBoardById(
-        @PathVariable Long boardId,
-        @RequestHeader(value = "Authorization", required = false) String token) {
-
+        @PathVariable Long boardId, 
+        @RequestHeader(value = "Authorization", required = false) String token){
+        
         userService.validateToken(token);
-
-        TravelBoard board =
-            travelBoardService.getSingleTravelBoardById(boardId, token);
-
+        TravelBoard board = travelBoardService.getSingleTravelBoardById(boardId, token);
         System.out.println("LOG COUNT = " + board.getActivityLogs().size());
         board.getActivityLogs().forEach(log -> {
-    System.out.println("LOG userId = " + log.getUser().getId());
-});
-
-        TravelBoardGetDTO dto =
-            DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board);
-
-
+            System.out.println("LOG userId = " + log.getUser().getId());
+        });
+        TravelBoardGetDTO dto = DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board);
         dto.setMemberIds(
             board.getMembers()
                 .stream()
@@ -118,8 +108,25 @@ public class TravelBoardController {
                 .collect(Collectors.toList())
         );
         dto.setOwnerId(board.getOwner().getId());
-        
+        return dto;
+    }
 
+    // GET /travelboards/{boardId}/public - view a public board without being a member
+    @GetMapping("/travelboards/{boardId}/public")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public TravelBoardGetDTO getPublicTravelBoardById(
+            @PathVariable Long boardId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        userService.validateToken(token);
+        TravelBoard board = travelBoardService.getPublicTravelBoardById(boardId);
+        TravelBoardGetDTO dto = DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board);
+        dto.setMemberIds(
+            board.getMembers()
+                .stream()
+                .map(user -> user.getId())
+                .collect(Collectors.toList())
+        );
         return dto;
     }
 
@@ -139,5 +146,55 @@ public class TravelBoardController {
 
 	}
 
+    @GetMapping("/travelboards/public")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<TravelBoardGetDTO> getPublicTravelBoards(
+        @RequestHeader(value = "Authorization", required = false) String token) {
 
+        userService.validateToken(token);
+        List<TravelBoard> publicBoards = travelBoardService.getPublicTravelBoards();
+
+        List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
+        for (TravelBoard travelBoard : publicBoards) {
+            travelBoardGetDTOs.add(DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(travelBoard));
+        }
+        return travelBoardGetDTOs;
+    }
+
+    @GetMapping("/travelboards/friends")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<TravelBoardGetDTO> getFriendsTravelBoards(
+        @RequestHeader(value = "Authorization", required = false) String token) {
+
+        userService.validateToken(token);
+        List<TravelBoard> friendsBoards = travelBoardService.getFriendsTravelBoards();
+
+        List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
+        for (TravelBoard travelBoard : friendsBoards) {
+            travelBoardGetDTOs.add(DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(travelBoard));
+        }
+        return travelBoardGetDTOs;
+    }
+
+    @GetMapping("/users/{userId}/travelboards")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<TravelBoardGetDTO> getTravelBoardsByUserId(
+		@PathVariable Long userId,
+		@RequestHeader(value = "Authorization", required = false) String token) {
+
+		userService.validateToken(token);
+
+		List<TravelBoard> travelBoards = travelBoardService.getTravelBoardsBySpecificUser(userId);
+
+		List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
+		for (TravelBoard board : travelBoards) {
+			travelBoardGetDTOs.add(DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board));
+		}
+		return travelBoardGetDTOs;
+	}
 }
+
+

@@ -14,6 +14,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import ch.uzh.ifi.hase.soprafs26.repository.FriendRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.InvitationRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.JoinRequestRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PreferencesRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TravelBoardRepository;
 
@@ -60,6 +61,10 @@ public class PreferencesServiceIntegrationTest {
     @Autowired
     private FriendRequestRepository friendRequestRepository;
 
+    @Qualifier("joinRequestRepository")
+    @Autowired
+    private JoinRequestRepository joinRequestRepository;
+
     @Autowired
 	private PreferencesService preferencesService;
 
@@ -70,6 +75,7 @@ public class PreferencesServiceIntegrationTest {
 
 	@BeforeEach
 	public void setup() {
+        joinRequestRepository.deleteAll();
         invitationRepository.deleteAll();
         friendRequestRepository.deleteAll();
         travelBoardRepository.deleteAll();
