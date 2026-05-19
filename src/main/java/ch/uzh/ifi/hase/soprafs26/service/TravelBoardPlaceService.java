@@ -19,7 +19,6 @@ public class TravelBoardPlaceService {
 
     private final TravelBoardPlaceRepository travelBoardPlaceRepository;
     private final TravelBoardRepository travelBoardRepository;
-    private final GeocodingService geocodingService;
     private final ActivityLogService activityLogService;
     private final UserRepository userRepository;
 
@@ -27,11 +26,9 @@ public class TravelBoardPlaceService {
         @Qualifier("travelBoardPlaceRepository") TravelBoardPlaceRepository travelBoardPlaceRepository,
         @Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository,
         @Qualifier ("userRepository") UserRepository userRepository,
-        GeocodingService geocodingService,
         ActivityLogService activityLogService) {
             this.travelBoardPlaceRepository = travelBoardPlaceRepository;
             this.travelBoardRepository = travelBoardRepository;
-            this.geocodingService = geocodingService;
             this.activityLogService = activityLogService;
             this.userRepository = userRepository;
     }
@@ -49,9 +46,6 @@ public class TravelBoardPlaceService {
         newTravelBoardPlace.setBoard(board);
         newTravelBoardPlace.setUser(user);
 
-        if (newTravelBoardPlace.getAddress() != null && newTravelBoardPlace.getCity() == null) {
-            newTravelBoardPlace.setCity(geocodingService.resolveCityFromAddress(newTravelBoardPlace.getAddress()));
-        }
 
         TravelBoardPlace saved = travelBoardPlaceRepository.save(newTravelBoardPlace);
 

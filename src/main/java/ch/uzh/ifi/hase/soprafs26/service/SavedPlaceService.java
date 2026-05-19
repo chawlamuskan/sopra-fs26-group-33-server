@@ -17,15 +17,12 @@ public class SavedPlaceService {
 
     private final SavedPlaceRepository savedPlaceRepository;
     private final UserRepository userRepository;
-    private final GeocodingService geocodingService;
 
     public SavedPlaceService(
         @Qualifier("savedPlaceRepository") SavedPlaceRepository savedPlaceRepository,
-        @Qualifier("userRepository") UserRepository userRepository,
-        @Qualifier("geocodingService") GeocodingService geocodingService) {
+        @Qualifier("userRepository") UserRepository userRepository) {
         this.savedPlaceRepository = savedPlaceRepository;
         this.userRepository = userRepository;
-        this.geocodingService = geocodingService; // ← was missing
     }
 
     public SavedPlace saveToUser(Long userId, SavedPlace newSavedPlace) {
@@ -36,10 +33,7 @@ public class SavedPlaceService {
 
         newSavedPlace.setUser(user);
 
-        // Resolve city at save time if not already set
-        if (newSavedPlace.getAddress() != null && newSavedPlace.getCity() == null) {
-            newSavedPlace.setCity(geocodingService.resolveCityFromAddress(newSavedPlace.getAddress()));
-        }
+      
 
         return savedPlaceRepository.save(newSavedPlace);
     }
