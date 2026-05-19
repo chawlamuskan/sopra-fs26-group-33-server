@@ -215,4 +215,14 @@ public class TravelBoardService {
         return travelBoardRepository.findByPrivacy(PrivacyLevel.FRIENDS);
  
     }
+
+    public List<TravelBoard> getVisibleTravelBoardsByUserId(Long userId) {
+        // get all boards where user is owner
+        List<TravelBoard> allBoards = travelBoardRepository.findByOwnerId(userId);
+        
+        // filter out PRIVATE boards — only PUBLIC and FRIENDS are visible
+        return allBoards.stream()
+                .filter(b -> b.getPrivacy() != PrivacyLevel.PRIVATE)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

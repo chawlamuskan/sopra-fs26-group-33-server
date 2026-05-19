@@ -46,6 +46,9 @@ public class JoinRequestServiceTest {
     @InjectMocks
     private JoinRequestService joinRequestService;
 
+    @Mock
+    private ActivityLogService activityLogService;
+
     private User sender;
     private User owner;
     private TravelBoard board;

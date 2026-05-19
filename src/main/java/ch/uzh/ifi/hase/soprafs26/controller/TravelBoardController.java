@@ -162,20 +162,27 @@ public class TravelBoardController {
         return travelBoardGetDTOs;
     }
 
-    @GetMapping("/travelboards/friends")
+    // travelboards visible in the friends tab of Community page
+    @GetMapping("/users/{userId}/travelboards/visible")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<TravelBoardGetDTO> getFriendsTravelBoards(
-        @RequestHeader(value = "Authorization", required = false) String token) {
-
+    public List<TravelBoardGetDTO> getVisibleTravelBoardsByUserId(
+            @PathVariable Long userId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
         userService.validateToken(token);
-        List<TravelBoard> friendsBoards = travelBoardService.getFriendsTravelBoards();
+        List<TravelBoard> boards = travelBoardService.getVisibleTravelBoardsByUserId(userId);
 
-        List<TravelBoardGetDTO> travelBoardGetDTOs = new ArrayList<>();
-        for (TravelBoard travelBoard : friendsBoards) {
-            travelBoardGetDTOs.add(DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(travelBoard));
+        List<TravelBoardGetDTO> dtos = new ArrayList<>();
+        for (TravelBoard board : boards) {
+            TravelBoardGetDTO dto = DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board);
+            dto.setMemberIds(
+                board.getMembers().stream()
+                    .map(u -> u.getId())
+                    .collect(Collectors.toList())
+            );
+            dtos.add(dto);
         }
-        return travelBoardGetDTOs;
+        return dtos;
     }
 
     @GetMapping("/users/{userId}/travelboards")
