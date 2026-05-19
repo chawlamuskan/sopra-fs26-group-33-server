@@ -34,6 +34,8 @@ public class TravelBoardGetDTO {
     private Double lngMin;
     private Double lngMax;
 
+    private String countryCode;
+
     public Long getId() {
         return id;
     }
@@ -128,4 +130,12 @@ public class TravelBoardGetDTO {
 
     public Double getLngMax() { return lngMax; }
     public void setLngMax(Double lngMax) { this.lngMax = lngMax; }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+    
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
+    }
 }

@@ -25,6 +25,7 @@ public class TravelBoardPostDTO {
 	private Double lngMin;
 	private Double lngMax;
 
+	private String countryCode;
 
 	public String getName() {
 		return name;
@@ -86,4 +87,11 @@ public class TravelBoardPostDTO {
 	public Double getLngMax() { return lngMax; }
 	public void setLngMax(Double lngMax) { this.lngMax = lngMax; }
 
+	public String getCountryCode() {
+	    return countryCode;
+	}
+	
+	public void setCountryCode(String countryCode) {
+	    this.countryCode = countryCode;
+	}
 }
