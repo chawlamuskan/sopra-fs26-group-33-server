@@ -9,6 +9,32 @@ interactive world map, they can create and share travel boards, plan itineraries
 
 ## High-Level Components
 
+### Saved Places Services
+The backend manages all operations related to users’ saved places. Places are categorised according to the categories provided by the  [Google Places API](https://developers.google.com/maps/documentation/places/web-service/overview).
+
+The server communicates with the database to:
+
+- Retrieve saved places for authenticated users
+- Organise places into their respective categories
+- Remove places from the user’s saved list
+- Maintain persistent storage of user-specific location data
+
+These services ensure that saved places remain synchronised across the application and accessible from the frontend interface.
+
+### Travel Boards Services
+The Travel Boards backend component manages the creation, retrieval, and collaboration features related to trip collections. The server handles travel board data, including board names, locations, optional date ranges, and privacy settings (PRIVATE, FRIENDS, PUBLIC).
+
+The backend is responsible for:
+
+- Creating and updating travel boards
+- Managing board membership and permissions
+- Handling invite and join flows through generated codes, notifications, and friend invitations
+- Persisting places associated with each board
+- Processing board deletion, renaming, and member removal actions
+
+Additionally, the server validates access permissions to ensure that only authorised users can view or modify boards according to their privacy settings and membership roles.
+
+
 ## Launch & Deployment 
 
 (from previous read me, in case we need them :) )
