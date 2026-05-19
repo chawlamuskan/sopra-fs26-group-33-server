@@ -55,6 +55,9 @@ public class TravelBoard implements Serializable {
 
 	@Column(nullable = true)
 	private Double lngMax;
+
+	@Column(nullable = true)
+	private String countryCode;
     
     @ManyToMany
 	private List<User> members = new ArrayList<>();
@@ -161,6 +164,14 @@ public class TravelBoard implements Serializable {
 	public void setLngMax(Double lngMax) { this.lngMax = lngMax; }
 	public List<Invitation> getInvitations() {
 		return invitations;
+	}
+
+	public String getCountryCode() {
+	    return countryCode;
+	}
+	
+	public void setCountryCode(String countryCode) {
+	    this.countryCode = countryCode;
 	}
 
 	public void setInvitations(List<Invitation> invitations) {

@@ -60,6 +60,7 @@ public interface DTOMapper {
 	@Mapping(source = "latMax", target = "latMax")
 	@Mapping(source = "lngMin", target = "lngMin")
 	@Mapping(source = "lngMax", target = "lngMax")
+	@Mapping(source = "countryCode", target = "countryCode")
 	TravelBoard convertTravelBoardPostDTOtoEntity(TravelBoardPostDTO travelBoardPostDTO);
 
 	@Mapping(source = "id", target = "id")
@@ -77,6 +78,7 @@ public interface DTOMapper {
 	@Mapping(source = "lngMax", target = "lngMax")
 	@Mapping(target = "memberIds", ignore = true)
 	@Mapping(source = "activityLogs", target = "activityLogs")
+	@Mapping(source = "countryCode", target = "countryCode")
 	TravelBoardGetDTO convertEntityToTravelBoardGetDTO(TravelBoard travelBoard);
 
 	// ==================== ActivityLog Mappings ====================

@@ -9,7 +9,6 @@ import java.util.Set;
 @Table(
     name = "travelBoardPlaces",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"externalPlaceId", "user_id"}), // we want to know which user has added the place
         @UniqueConstraint(columnNames = {"externalPlaceId", "board_id"}) // a place can only be saved once per board
     }
 )
