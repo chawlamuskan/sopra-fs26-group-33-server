@@ -23,14 +23,16 @@ public class JoinRequestService {
     private final JoinRequestRepository joinRequestRepository;
     private final TravelBoardRepository travelBoardRepository;
     private final UserRepository userRepository;
+    private final ActivityLogService activityLogService; 
 
     public JoinRequestService(
             @Qualifier("joinRequestRepository") JoinRequestRepository joinRequestRepository,
             @Qualifier("travelBoardRepository") TravelBoardRepository travelBoardRepository,
-            @Qualifier("userRepository") UserRepository userRepository) {
+            @Qualifier("userRepository") UserRepository userRepository, ActivityLogService activityLogService) {
         this.joinRequestRepository = joinRequestRepository;
         this.travelBoardRepository = travelBoardRepository;
         this.userRepository = userRepository;
+        this.activityLogService = activityLogService;
     }
 
     // send a join request to a board
@@ -109,6 +111,8 @@ public class JoinRequestService {
 
         joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
         joinRequestRepository.save(joinRequest);
+
+        activityLogService.log(board, sender, "joined the board");
     }
 
     // decline a join request
