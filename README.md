@@ -36,28 +36,65 @@ Additionally, the server validates access permissions to ensure that only author
 
 
 ## Launch & Deployment 
+To be able to work on this directory locally, developers should first clone the repository using either HTTPS or SSH:
 
-(from previous read me, in case we need them :) )
+**HTTPS**: 
+```bash
+git clone https://github.com/chawlamuskan/sopra-fs26-group-33-server.git
+```
+**SSH**: 
+```bash
+git clone git@github.com:chawlamuskan/sopra-fs26-group-33-server.git
+```
 
 ### Build
+Build the project using Gradle: 
 
 ```bash
 ./gradlew build
 ```
+This compiles the code and resolves all dependencies. 
 
 ### Run
+Start the Spring Boot server locally: 
 
 ```bash
 ./gradlew bootRun
 ```
-
 You can verify that the server is running by visiting `localhost:8080` in your browser.
 
 ### Test
+Run the automated test suite using: 
 
 ```bash
 ./gradlew test
 ```
+This executes all unit and integration tests defined in the project. 
+
+### Committing changes
+The project followed a branch workflow. Each team member worked on a dedicated branch and pushed changes there first. Once a feature or fix was completed, a pull request (PR) was created to merge the changes into the main branch.
+All pull requests were reviewed by at least one other team member before being merged, ensuring code quality and consistency across the project. Deployment needs to be manually triggered.
+
+Typical workflow: 
+
+- Moving to own branch
+```bash
+git checkout your-branch-name
+```
+- State changes
+```bash
+git add .
+```
+- Commit changes
+```bash
+git commit -m “Description of changes”
+```
+- Pushing branch to remote
+
+```bash
+git push origin your-branch-name
+```
+
 
 ## Roadmaps
 
