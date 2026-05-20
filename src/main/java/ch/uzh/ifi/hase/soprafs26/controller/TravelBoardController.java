@@ -202,6 +202,27 @@ public class TravelBoardController {
 		}
 		return travelBoardGetDTOs;
 	}
+
+    @GetMapping("/travelboards/{boardId}/visible")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public TravelBoardGetDTO getVisibleTravelBoardById(
+            @PathVariable Long boardId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        userService.validateToken(token);
+
+        TravelBoard board = travelBoardService.getVisibleTravelBoardById(boardId, token);
+
+        TravelBoardGetDTO dto = DTOMapper.INSTANCE.convertEntityToTravelBoardGetDTO(board);
+        dto.setMemberIds(
+            board.getMembers().stream()
+                .map(user -> user.getId())
+                .collect(Collectors.toList())
+        );
+
+        return dto;
+    }
 }
 
 

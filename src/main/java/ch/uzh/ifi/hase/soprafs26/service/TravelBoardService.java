@@ -177,8 +177,8 @@ public class TravelBoardService {
     TravelBoard board = travelBoardRepository.findById(boardId)
             .orElseThrow(() -> new ResponseStatusException(
                     HttpStatus.NOT_FOUND, "Board not found"));
-    if (board.getPrivacy() == PrivacyLevel.PRIVATE) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This board is private");}
+    if (board.getPrivacy() != PrivacyLevel.PUBLIC) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This board is not public");}
     return board;
 }
 
@@ -224,5 +224,22 @@ public class TravelBoardService {
         return allBoards.stream()
                 .filter(b -> b.getPrivacy() != PrivacyLevel.PRIVATE)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    public TravelBoard getVisibleTravelBoardById(Long boardId, String token) {
+        User user = userRepository.findByToken(token);
+
+        TravelBoard board = travelBoardRepository.findById(boardId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board not found"));
+
+        boolean isPublic = board.getPrivacy() == PrivacyLevel.PUBLIC;
+        boolean isFriendBoard = board.getPrivacy() == PrivacyLevel.FRIENDS;
+        boolean isFriendOfOwner = board.getOwner().getFriends().contains(user);
+
+        if (isPublic || (isFriendBoard && isFriendOfOwner)) {
+            return board;
+        }
+
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to view this board");
     }
 }
