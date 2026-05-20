@@ -10,6 +10,7 @@ interactive world map, they can create and share travel boards, plan itineraries
 These are the technologies we used for the project: 
 
 - Java: primary language
+- JPA: mapping java objects to database tables, H2 in-memory database during development and testing for data storage
 - Gradle: build tool to manage dependencies, compile the code and run the tests
 - Spring Boot: framework for building REST APIs
 - SonarCloud: code quality and test coverage
