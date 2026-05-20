@@ -7,6 +7,15 @@ interactive world map, they can create and share travel boards, plan itineraries
 
 ## Technologies Used
 
+These are the technologies we used for the project: 
+
+- Java: primary language
+- Gradle: build tool to manage dependencies, compile the code and run the tests
+- Spring Boot: framework for building REST APIs
+- SonarCloud: code quality and test coverage
+- Docker: containerization and ensuring the project runs the same way across local development, CI, and production environments
+- Google Cloud App Engine: deployment and hosting
+
 ## High-Level Components
 
 ### Saved Places Services
