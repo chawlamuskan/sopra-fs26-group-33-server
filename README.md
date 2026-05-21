@@ -44,6 +44,18 @@ The backend is responsible for:
 
 Additionally, the server validates access permissions to ensure that only authorised users can view or modify boards according to their privacy settings and membership roles.
 
+### Friend Request Services
+The Friend Request backend component manages friend requests and friendships between users.
+
+The server communicates with the database to:
+
+- Send friend requests between users
+- Retrieve pending friend requests
+- Accept or decline friend requests
+- Manage users’ friend lists
+- Remove friends from users’ friend lists
+
+These services ensure that only authorised users can manage friendship-related actions.
 
 ## Launch & Deployment 
 To be able to work on this directory locally, developers should first clone the repository using either HTTPS or SSH:
