@@ -184,5 +184,4 @@ The authors would like to thank the SOPRA team for their help during the semeste
 
 ## License
 
-
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
